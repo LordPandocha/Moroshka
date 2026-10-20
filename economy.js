@@ -1,21 +1,46 @@
-export const START_CASH = 1500;
-export const LAP_SALARY = 200;
-export const ROUNDS = 8;
-export const rub = value => `${Math.round(value).toLocaleString('ru-RU')} ₽`;
-export function discounted(price, percent = 0) {
-  return Math.max(0, Math.ceil(price * (100 - percent) / 100 / 10) * 10);
+export const START_CASH = 1200;
+export const PASS_START = 200;
+export const DECLINE_FINE = 30;
+export const ROUND_LIMIT = {2:16, 3:14, 4:12};
+export const rub = amount => `${Math.round(amount).toLocaleString('ru-RU')} ₽`;
+
+export function priceWithDiscount(price, percent = 0) {
+  return percent ? Math.ceil(price * (100 - percent) / 100 / 10) * 10 : price;
 }
-export function rentFor(tile, level = 0) {
-  return tile.rent * [1, 2, 4][Math.min(2, level)];
+
+export function rentFor(business, level = 0) {
+  return business.rent * [1, 2, 4][Math.min(2, Math.max(0, level))];
 }
-export function netWorth(player, tiles) {
-  return player.cash + player.owned.reduce((sum, index) => {
-    const tile = tiles[index];
-    return sum + tile.price + (player.levels[index] || 0) * tile.upgrade;
-  }, 0);
+
+export function transfer(payer, amount, payee = null) {
+  const fromCash = Math.min(payer.cash, amount);
+  payer.cash -= fromCash;
+  payer.debt += amount - fromCash;
+  if (payee) payee.cash += amount;
+  return {fromCash, borrowed: amount - fromCash};
 }
-export function pay(player, amount) {
-  const paid = Math.min(player.cash, amount);
+
+export function receive(player, amount) {
+  player.cash += amount;
+}
+
+export function repay(player, amount) {
+  const paid = Math.min(player.cash, player.debt, amount);
   player.cash -= paid;
-  return {paid, shortfall: amount - paid};
+  player.debt -= paid;
+  return paid;
+}
+
+export function lap(player, oilIncome = 0) {
+  const interest = Math.ceil(player.debt * .1 / 10) * 10;
+  player.debt += interest;
+  const income = PASS_START + oilIncome + (player.salaryBonus || 0);
+  player.cash += income;
+  player.salaryBonus = 0;
+  return {interest, income};
+}
+
+export function netWorth(player, holdings) {
+  return player.cash - player.debt + holdings.reduce((sum, holding) =>
+    sum + holding.business.price + holding.level * holding.business.upgrade, 0);
 }

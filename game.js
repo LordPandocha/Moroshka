@@ -1,286 +1,140 @@
-import * as THREE from './vendor/three.module.js';
-import {START_CASH, LAP_SALARY, ROUNDS, rub, discounted, rentFor, netWorth, pay} from './economy.js';
+import {START_CASH, PASS_START, DECLINE_FINE, ROUND_LIMIT, rub, priceWithDiscount, rentFor, transfer, receive, repay, lap, netWorth} from './economy.js';
 
-const TILE_DATA = [
-  {name:'Старт',kind:'start',icon:'↗',text:'Каждый полный круг приносит 200 ₽ зарплаты.'},
-  {name:'Парковый бульвар',kind:'plot',icon:'♣',price:3,rent:1,text:'Любимое пространство для прогулок. Купите его и получайте аренду.'},
-  {name:'Морошковая поляна',kind:'berry',icon:'✳',reward:2,text:'Ягоды поспели! Возьмите 2 морошки.'},
-  {name:'Городской музей',kind:'plot',icon:'▣',price:4,rent:2,text:'Эколого-краеведческий музей хранит истории города. Его можно купить в игре.'},
-  {name:'Северный ветер',kind:'storm',icon:'❄',text:'Метель забирает 2 морошки. Олень может защитить вас.'},
-  {name:'Оленья тропа',kind:'deer',icon:'♞',text:'Встреча с оленем: получите жетон защиты от метели.'},
-  {name:'Джекпот',kind:'jackpot',icon:'★',text:'Северный джекпот! Случайный приз ждёт вас.'},
-  {name:'Дом культуры',kind:'plot',icon:'♫',price:3,rent:1,text:'Площадка для встреч и праздников. Купите её в свой маршрут.'},
-  {name:'Лесная тропа',kind:'berry',icon:'✳',reward:2,text:'Найдите 2 морошки среди северных сосен.'},
-  {name:'Сосновый сквер',kind:'plot',icon:'♠',price:3,rent:1,text:'Тихое место среди деревьев. Купите его в свой маршрут.'},
-  {name:'Помощь соседу',kind:'bonus',icon:'♡',reward:2,text:'Вы помогли соседу и получили 2 морошки.'},
-  {name:'Морошковая поляна',kind:'berry',icon:'✳',reward:3,text:'Большая корзинка ягод! Возьмите 3 морошки.'},
-  {name:'Северное сияние',kind:'bonus',icon:'✧',reward:1,text:'Вдохновение под северным небом. Получите 1 морошку.'},
-  {name:'Нефтяная вышка',kind:'plot',icon:'◆',price:4,rent:2,text:'Игровое напоминание об истории освоения месторождений. Купите клетку.'},
-  {name:'Оленья тропа',kind:'deer',icon:'♞',text:'Олень станет вашим спутником и защитит от одной метели.'},
-  {name:'Тёплый дом',kind:'plot',icon:'⌂',price:3,rent:1,text:'Окошки светятся даже в зимний вечер. Купите уютный уголок.'},
-  {name:'Джекпот',kind:'jackpot',icon:'★',text:'Проверьте, что принёс северный джекпот.'},
-  {name:'Полярный экспресс',kind:'plot',icon:'➤',price:4,rent:2,text:'По игровому маршруту мчится полярный экспресс. Купите станцию.'},
-  {name:'Морошковая поляна',kind:'berry',icon:'✳',reward:2,text:'Ещё две ягоды для вашей корзинки.'},
-  {name:'Зимний вечер',kind:'storm',icon:'❄',text:'Снегопад замедляет путь и забирает 2 морошки. Олень защищает.'},
-  {name:'Семейный парк',kind:'plot',icon:'♣',price:3,rent:1,text:'Место для прогулок всей семьёй. Купите его в игре.'},
-  {name:'Добрая встреча',kind:'bonus',icon:'♡',reward:2,text:'Друзья угостили вас морошкой. Получите 2 ягоды.'},
-  {name:'Ямальская тайга',kind:'plot',icon:'♠',price:4,rent:2,text:'Сказочный участок тайги на нашем поле. Его можно купить.'},
-  {name:'Ягодный привал',kind:'berry',icon:'✳',reward:2,text:'Перед новым кругом возьмите ещё 2 морошки.'}
-];
-
-const PRICES = {1:[160,30,90,'отдых'],3:[180,35,100,'культура'],7:[170,30,90,'культура'],9:[150,25,80,'отдых'],13:[320,70,160,'энергия'],15:[190,35,100,'сервис'],17:[240,45,120,'транспорт'],20:[180,35,100,'отдых'],22:[220,40,110,'природа']};
-for (const [index, [price,rent,upgrade,category]] of Object.entries(PRICES)) Object.assign(TILE_DATA[index],{price,rent,upgrade,category});
-TILE_DATA[13].name='Нефтяная качалка';
-TILE_DATA[13].text='Промышленный актив: аренда при визите соперника и 80 ₽ добычного дохода за каждый круг владельца.';
-for(const index of [2,8,11,12,18,23]){TILE_DATA[index].kind='chance';TILE_DATA[index].icon='✦';TILE_DATA[index].name='Северный шанс';TILE_DATA[index].text='Возьмите карту северного шанса.'}
-for(const index of [5,10,14,21]){TILE_DATA[index].kind='fund';TILE_DATA[index].icon='◇';TILE_DATA[index].name='Городской фонд';TILE_DATA[index].text='Возьмите карту городского фонда.'}
-TILE_DATA[4]={name:'Северные расходы',kind:'tax',icon:'−',cost:80,text:'Платёж в банк: 80 ₽.'};
-TILE_DATA[19]={name:'Зимние расходы',kind:'tax',icon:'−',cost:100,text:'Платёж в банк: 100 ₽.'};
-TILE_DATA[6]={name:'Морошковый джекпот',kind:'jackpot',icon:'★',text:'Случайный денежный приз.'};
-TILE_DATA[16]={name:'Олений джекпот',kind:'jackpot',icon:'★',text:'Случайный денежный приз.'};
-const CARDS = {
- chance:[
-  {title:'Карта «Морошка»',text:'Три покупки или улучшения предприятий категорий «отдых», «культура» и «сервис» со скидкой 10%.',type:'discount',value:3},
-  {title:'Удачная ярмарка',text:'Продажа северных сувениров: получите из банка 140 ₽.',type:'cash',value:140},
-  {title:'Помощь оленеводам',text:'Передайте в городской фонд 70 ₽.',type:'cash',value:-70},
-  {title:'Северная поставка',text:'Банк выплачивает вам 100 ₽.',type:'cash',value:100},
-  {title:'Ремонт техники',text:'Потратьте 90 ₽ на ремонт.',type:'cash',value:-90}
- ],
- fund:[
-  {title:'Дорога к отпуску',text:'Игровая компенсация поездки: получите 120 ₽. Реальная льгота зависит от условий закона и работодателя.',type:'cash',value:120},
-  {title:'Северная надбавка',text:'Игровая премия за труд на Севере: получите 100 ₽.',type:'cash',value:100},
-  {title:'Районный коэффициент',text:'Разовый игровой бонус к зарплате: получите 80 ₽.',type:'cash',value:80},
-  {title:'Городской субботник',text:'Вклад в город: заплатите 60 ₽ в банк.',type:'cash',value:-60},
-  {title:'Семейный фестиваль',text:'Городской фонд выплачивает 110 ₽.',type:'cash',value:110}
- ]
-};
-
-const POSITIONS = [];
-for(let c=0;c<7;c++) POSITIONS.push([0,c]);
-for(let r=1;r<7;r++) POSITIONS.push([r,6]);
-for(let c=5;c>=0;c--) POSITIONS.push([6,c]);
-for(let r=5;r>=1;r--) POSITIONS.push([r,0]);
-const COLORS = [0xf18b50,0x77c8bb,0xecc867,0xb89fe1];
-const DICE = ['⚀','⚁','⚂','⚃','⚄','⚅'];
-const kindColors = {start:0xf2ad70,plot:0xe7e2cb,chance:0xd3b182,fund:0xa5c3bd,tax:0xb7776d,jackpot:0xf4b257};
 const $ = id => document.getElementById(id);
-const sceneWrap = $('sceneWrap');
-const setupDialog = $('setupDialog');
-const tileDialog = $('tileDialog');
-const winnerDialog = $('winnerDialog');
-const roundLabel = $('roundLabel');
-const rollButton = $('rollButton');
-const endTurnButton = $('endTurnButton');
-const choiceActions = $('choiceActions');
-let renderer, scene, camera, board, raycaster;
-let tileMeshes = [], ownerMarkers = [], tokenMeshes = [];
-let players = [], owners = Array(TILE_DATA.length).fill(null);
-let turn = 0, turnsTaken = 0, phase = 'setup', pendingTile = -1;
-let theta = .62, phi = .94, distance = 19;
-let pointerStart = null;
-let sceneVisible = true;
-const pumpBeams=[];
-const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+const COLORS = ['#d87648','#6aaba0','#dbbc62','#aa8cca'];
+const DICE = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+const CATEGORIES = {
+  leisure:{label:'ОТДЫХ',color:'#91b59f',icon:'♣'},
+  culture:{label:'КУЛЬТУРА',color:'#d1a778',icon:'▣'},
+  service:{label:'СЕРВИС',color:'#a9bec3',icon:'⌂'},
+  transport:{label:'ТРАНСПОРТ',color:'#c6a89a',icon:'➤'},
+  energy:{label:'ЭНЕРГИЯ',color:'#d48a5d',icon:'◆'}
+};
+const BUSINESSES = [
+  {id:'park',name:'Парковый бульвар',category:'leisure',price:160,rent:25,upgrade:80,icon:'♣'},
+  {id:'familypark',name:'Семейный парк',category:'leisure',price:180,rent:30,upgrade:90,icon:'♣'},
+  {id:'ski',name:'Лыжная тропа',category:'leisure',price:170,rent:30,upgrade:85,icon:'❄'},
+  {id:'square',name:'Сосновый сквер',category:'leisure',price:150,rent:25,upgrade:75,icon:'♠'},
+  {id:'museum',name:'Городской музей',category:'culture',price:200,rent:35,upgrade:100,icon:'▣'},
+  {id:'theater',name:'Дом культуры',category:'culture',price:180,rent:30,upgrade:90,icon:'♫'},
+  {id:'festival',name:'Северная сцена',category:'culture',price:190,rent:35,upgrade:95,icon:'✦'},
+  {id:'cafe',name:'Морошковое кафе',category:'service',price:170,rent:30,upgrade:85,icon:'✳'},
+  {id:'market',name:'Северный рынок',category:'service',price:190,rent:35,upgrade:95,icon:'◇'},
+  {id:'workshop',name:'Тёплая мастерская',category:'service',price:180,rent:30,upgrade:90,icon:'⌂'},
+  {id:'station',name:'Автовокзал',category:'transport',price:220,rent:40,upgrade:110,icon:'➤'},
+  {id:'express',name:'Полярный экспресс',category:'transport',price:240,rent:45,upgrade:120,icon:'➤'},
+  {id:'route',name:'Северный маршрут',category:'transport',price:210,rent:40,upgrade:105,icon:'↗'},
+  {id:'pump',name:'Нефтяная качалка',category:'energy',price:300,rent:55,upgrade:150,icon:'◆',oil:60},
+  {id:'depot',name:'Энергостанция',category:'energy',price:260,rent:50,upgrade:130,icon:'ϟ'},
+  {id:'terminal',name:'Топливный терминал',category:'energy',price:270,rent:50,upgrade:135,icon:'◆'}
+];
+const TILES = [
+  {kind:'start',name:'Старт',icon:'↗'},
+  {kind:'business',category:'leisure',fixed:'park'},
+  {kind:'chance',name:'Северный шанс',icon:'✦'},
+  {kind:'business',category:'culture',fixed:'museum'},
+  {kind:'tax',name:'Городской сбор',icon:'−',amount:70},
+  {kind:'business',category:'service',fixed:'cafe'},
+  {kind:'jackpot',name:'Морошковый приз',icon:'★'},
+  {kind:'business',category:'leisure',fixed:'familypark'},
+  {kind:'chance',name:'Северный шанс',icon:'✦'},
+  {kind:'business',category:'culture',fixed:'theater'},
+  {kind:'fund',name:'Городской фонд',icon:'◇'},
+  {kind:'business',category:'transport',fixed:'station'},
+  {kind:'tax',name:'Зимний ремонт',icon:'−',amount:90},
+  {kind:'business',category:'energy',fixed:'pump'},
+  {kind:'fund',name:'Городской фонд',icon:'◇'},
+  {kind:'business',category:'service',fixed:'market'},
+  {kind:'jackpot',name:'Олений приз',icon:'★'},
+  {kind:'business',category:'transport',fixed:'express'},
+  {kind:'chance',name:'Северный шанс',icon:'✦'},
+  {kind:'tax',name:'Коммунальные расходы',icon:'−',amount:80},
+  {kind:'business',category:'leisure',fixed:'ski'},
+  {kind:'fund',name:'Городской фонд',icon:'◇'},
+  {kind:'business',category:'energy',fixed:'depot'},
+  {kind:'chance',name:'Северный шанс',icon:'✦'}
+];
+const CARDS = {
+  chance:[
+    {title:'Карта «Морошка»',text:'Три покупки или улучшения в категориях «отдых», «культура» и «сервис» со скидкой 10%.',effect:'discount',value:3,icon:'✳'},
+    {title:'Ягодная ярмарка',text:'Банк выплачивает вам 120 ₽ за удачную торговлю.',effect:'cash',value:120,icon:'✳'},
+    {title:'Северная поставка',text:'Дополнительная выручка: получите 90 ₽.',effect:'cash',value:90,icon:'➤'},
+    {title:'Ремонт оборудования',text:'Заплатите банку 80 ₽.',effect:'cash',value:-80,icon:'◆'},
+    {title:'Оленья удача',text:'Следующая аренда, которую вы должны заплатить, отменяется.',effect:'shield',value:1,icon:'♞'},
+    {title:'Тёплый вечер',text:'Банк выплачивает вам 70 ₽.',effect:'cash',value:70,icon:'⌂'},
+    {title:'Внезапная метель',text:'Потратьте 60 ₽ на дорогу.',effect:'cash',value:-60,icon:'❄'},
+    {title:'Премия за маршрут',text:'При следующем прохождении старта получите дополнительно 100 ₽.',effect:'salary',value:100,icon:'↗'}
+  ],
+  fund:[
+    {title:'Дорога к отпуску',text:'Игровая компенсация: получите 120 ₽ из банка.',effect:'cash',value:120,icon:'➤'},
+    {title:'Северная надбавка',text:'Игровая премия: получите 100 ₽.',effect:'cash',value:100,icon:'✦'},
+    {title:'Районный коэффициент',text:'Разовый игровой бонус: получите 80 ₽.',effect:'cash',value:80,icon:'◇'},
+    {title:'Семейный фестиваль',text:'Получите 90 ₽ на праздничной ярмарке.',effect:'cash',value:90,icon:'♫'},
+    {title:'Городской субботник',text:'Вклад в город: заплатите банку 50 ₽.',effect:'cash',value:-50,icon:'♣'},
+    {title:'Поддержка соседей',text:'Банк выплачивает вам 70 ₽.',effect:'cash',value:70,icon:'♡'},
+    {title:'Ремонт крыши',text:'Заплатите банку 70 ₽.',effect:'cash',value:-70,icon:'⌂'},
+    {title:'Спутник-олень',text:'Следующая аренда, которую вы должны заплатить, отменяется.',effect:'shield',value:1,icon:'♞'}
+  ]
+};
+const PATH=[];
+for(let c=0;c<7;c++)PATH.push([1,c+1]);
+for(let r=1;r<7;r++)PATH.push([r+1,7]);
+for(let c=5;c>=0;c--)PATH.push([7,c+1]);
+for(let r=5;r>=1;r--)PATH.push([r+1,1]);
 
-function coord(index){const [r,c]=POSITIONS[index];return new THREE.Vector3((c-3)*1.52,0,(r-3)*1.52)}
-function material(color,roughness=.86){return new THREE.MeshStandardMaterial({color,roughness,metalness:.04})}
-function mesh(geometry,mat,x,y,z,parent=board){const part=new THREE.Mesh(geometry,mat);part.position.set(x,y,z);part.castShadow=true;part.receiveShadow=true;parent.add(part);return part}
-function box(w,h,d,mat,x,y,z,parent=board){return mesh(new THREE.BoxGeometry(w,h,d),mat,x,y,z,parent)}
-function sphere(rad,mat,x,y,z,parent=board){return mesh(new THREE.SphereGeometry(rad,12,9),mat,x,y,z,parent)}
-function cone(rad,h,mat,x,y,z,parent=board){return mesh(new THREE.ConeGeometry(rad,h,7),mat,x,y,z,parent)}
+let state=null;
+let detailIndex=-1;
+const randomInt=max=>Math.floor(Math.random()*max);
+function shuffle(list){const result=[...list];for(let i=result.length-1;i>0;i--){const j=randomInt(i+1);[result[i],result[j]]=[result[j],result[i]]}return result}
+function active(){return state.players[state.turn]}
+function holdingAt(index){return state.holdings.find(h=>h.tileIndex===index)}
+function discountFor(player,business){return player.discount>0&&['leisure','culture','service'].includes(business.category)?10:0}
+function priceFor(player,business,upgrade=false){return priceWithDiscount(upgrade?business.upgrade:business.price,discountFor(player,business))}
+function useDiscount(player,business){if(discountFor(player,business))player.discount--}
+function setEvent(message){$('eventText').textContent=message}
+function makePlayer(index){return {name:`Игрок ${index+1}`,position:0,cash:START_CASH,debt:0,discount:0,shield:0,salaryBonus:0}}
+function startGame(count,mode){
+  state={players:Array.from({length:count},(_,i)=>makePlayer(i)),mode,turn:0,turnsTaken:0,phase:'roll',holdings:[],pending:null,offered:null,decks:{chance:shuffle(CARDS.chance),fund:shuffle(CARDS.fund)},businessDecks:{},lastRoll:null};
+  for(const category of Object.keys(CATEGORIES))state.businessDecks[category]=shuffle(BUSINESSES.filter(b=>b.category===category));
+  $('modeBadge').textContent=mode==='random'?'РЕЖИМ: СЛУЧАЙНЫЕ КАРТЫ':'РЕЖИМ: ЗАКРЕПЛЁННЫЙ БИЗНЕС';
+  $('diceValue').textContent='⚀ ⚀';setEvent('На старте у каждого 1 200 ₽. Бросайте кубики, покупайте бизнес и собирайте аренду.');render();
+}
+function render(){if(!state)return;const player=active(),limit=ROUND_LIMIT[state.players.length];$('roundLabel').textContent=`РАУНД ${Math.min(limit,Math.floor(state.turnsTaken/state.players.length)+1)} / ${limit}`;$('turnName').textContent=player.name;$('phaseHint').textContent={roll:'Бросайте два кубика.',moving:'Фишка движется по полю.',offer:'Выберите: покупка или штраф.',end:'Можно улучшить бизнес или передать ход.',finished:'Партия завершена.'}[state.phase];$('cashValue').textContent=rub(player.cash);$('debtValue').textContent=`Долг: ${rub(player.debt)}`;$('perks').textContent=[player.discount?`✳ Скидка «Морошка»: ${player.discount} примен.`:'',player.shield?'♞ Защита от следующей аренды':'',player.salaryBonus?`↗ Бонус к следующему кругу: ${rub(player.salaryBonus)}`:''].filter(Boolean).join(' · ');
+  $('playersList').replaceChildren(...state.players.map((p,i)=>{const row=document.createElement('div');row.className='player-row'+(i===state.turn?' current':'');row.style.setProperty('--player',COLORS[i]);const name=document.createElement('span');name.textContent=p.name;const score=document.createElement('strong');score.textContent=`${rub(p.cash)} · ${state.holdings.filter(h=>h.owner===i).length} карт`;row.append(name,score);return row}));
+  $('rollButton').hidden=state.phase!=='roll';$('nextButton').hidden=state.phase!=='end';$('repayButton').hidden=state.phase!=='end'||player.debt===0||player.cash===0;$('repayButton').textContent=`Погасить ${rub(Math.min(100,player.cash,player.debt))} долга`;
+  renderBoard();renderHoldings();
+}
+function renderBoard(){
+  const board=$('board');board.replaceChildren();
+  const center=document.createElement('div');center.className='board-center';center.innerHTML='<div class="center-pump" aria-hidden="true"><svg viewBox="0 0 160 100" fill="none"><path d="M18 88H143M69 88V43L90 88M69 43L48 88M47 37L121 21L134 30L50 49Z" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/><path d="M41 34L25 30L19 45L39 49M112 28V72M103 72H121" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><circle cx="69" cy="43" r="6" fill="currentColor"/></svg></div><div class="center-logo">МОРО<span>ШКА</span></div><p>МУРАВЛЕНКО / НАСТОЛЬНАЯ ИГРА</p><p class="center-note">Рубль за рублем — постройте свой северный маршрут.</p>';board.append(center);
+  TILES.forEach((tile,index)=>{const cell=document.createElement('button');cell.type='button';cell.className='cell';const [row,col]=PATH[index];cell.style.gridRow=row;cell.style.gridColumn=col;const holding=holdingAt(index),fixed=BUSINESSES.find(b=>b.id===tile.fixed),business=holding?.business||(state.mode==='fixed'?fixed:null);let name=tile.name||business?.name||CATEGORIES[tile.category].label;let icon=tile.icon||business?.icon||CATEGORIES[tile.category].icon;let color=tile.kind==='business'?CATEGORIES[tile.category].color:({start:'#d56e3d',chance:'#e5bb73',fund:'#a8c8b7',tax:'#c98375',jackpot:'#ddad53'}[tile.kind]);cell.style.setProperty('--band',color);cell.setAttribute('aria-label',`${index}: ${name}${holding?`, владелец ${state.players[holding.owner].name}`:''}`);if(holding){cell.classList.add('owner');cell.style.setProperty('--owner',COLORS[holding.owner])}if(state.players.some(p=>p.position===index))cell.classList.add('active');const band=document.createElement('span');band.className='band';const symbol=document.createElement('span');symbol.className='cell-icon';symbol.textContent=icon;const label=document.createElement('span');label.className='cell-name';label.textContent=name;const price=document.createElement('span');price.className='cell-price';price.textContent=tile.kind==='business'?(business?rub(business.price):'СЮРПРИЗ'):tile.kind==='tax'?`−${rub(tile.amount)}`:'';const tokens=document.createElement('span');tokens.className='tokens';state.players.forEach((p,i)=>{if(p.position===index){const token=document.createElement('i');token.className='token';token.style.setProperty('--token',COLORS[i]);token.setAttribute('aria-label',p.name);tokens.append(token)}});cell.append(band,symbol,label,price,tokens);cell.addEventListener('click',()=>inspect(index));board.append(cell)})
+}
+function renderHoldings(){const shelf=$('holdings');shelf.replaceChildren();const mine=state.holdings.filter(h=>h.owner===state.turn);if(!mine.length){const empty=document.createElement('div');empty.className='empty-shelf';empty.textContent='Пока нет карточек. Купленный бизнес появится здесь автоматически.';shelf.append(empty);return}mine.forEach(h=>{const card=document.createElement('button');card.type='button';card.className='holding-card';card.style.setProperty('--category',CATEGORIES[h.business.category].color);const cap=document.createElement('small');cap.textContent=CATEGORIES[h.business.category].label;const title=document.createElement('strong');title.textContent=h.business.name;const info=document.createElement('small');info.textContent=`Аренда ${rub(rentFor(h.business,h.level))} · ур. ${h.level}/2`;card.append(cap,title,info);card.addEventListener('click',()=>openDetail(h.tileIndex));shelf.append(card)})}
+function cardMarkup(business,holding=null){const category=CATEGORIES[business.category];return `<article class="dialog-card" style="--category:${category.color}"><div class="meta">${category.label} / КАРТОЧКА БИЗНЕСА</div><div class="symbol">${business.icon}</div><h3>${business.name}</h3><div class="stat"><span>ПОКУПКА</span><strong>${rub(business.price)}</strong></div><div class="stat"><span>АРЕНДА${holding?` · УР. ${holding.level}`:''}</span><strong>${rub(rentFor(business,holding?.level||0))}</strong></div><div class="stat"><span>УЛУЧШЕНИЕ</span><strong>${rub(business.upgrade)}</strong></div>${business.oil?`<div class="stat"><span>ДОХОД ЗА КРУГ</span><strong>${rub(business.oil)}</strong></div>`:''}</article>`}
+function inspect(index){const tile=TILES[index],holding=holdingAt(index),fixed=BUSINESSES.find(b=>b.id===tile.fixed),business=holding?.business||(state.mode==='fixed'?fixed:null);detailIndex=index;if(business){openDetail(index);return}const content=$('detailContent');if(tile.kind==='business')content.innerHTML=`<p class="eyebrow">СВОБОДНАЯ КЛЕТКА</p><h2>${CATEGORIES[tile.category].label}</h2><p>В случайном режиме карточка бизнеса открывается только при попадании фишки на клетку.</p>`;else content.innerHTML=`<p class="eyebrow">КЛЕТКА ПОЛЯ</p><h2>${tile.name}</h2><p>${tile.kind==='chance'||tile.kind==='fund'?'При попадании возьмите верхнюю карту этой колоды.':tile.kind==='tax'?`Заплатите банку ${rub(tile.amount)}.`:tile.kind==='jackpot'?'Банк выплатит случайный приз от 80 до 160 ₽.':`За полный круг получите ${rub(PASS_START)}.`}</p>`;$('upgradeButton').hidden=true;$('detailDialog').showModal()}
+function openDetail(index){const holding=holdingAt(index),tile=TILES[index],business=holding?.business||BUSINESSES.find(b=>b.id===tile.fixed);if(!business){inspect(index);return}detailIndex=index;$('detailContent').innerHTML=`<p class="eyebrow">${holding?`ВЛАДЕЛЕЦ: ${state.players[holding.owner].name.toUpperCase()}`:'КАРТОЧКА БИЗНЕСА'}</p>${cardMarkup(business,holding)}`;const canUpgrade=holding&&holding.owner===state.turn&&holding.level<2&&state.phase==='end';$('upgradeButton').hidden=!canUpgrade;if(canUpgrade){const price=priceFor(active(),business,true);$('upgradeButton').textContent=`Улучшить за ${rub(price)} → аренда ${rub(rentFor(business,holding.level+1))}`;$('upgradeButton').disabled=active().cash<price}$('detailDialog').showModal()}
+function drawBusiness(category){const deck=state.businessDecks[category];if(!deck.length)return null;return deck.shift()}
+function showOffer(index){const tile=TILES[index],business=state.mode==='fixed'?BUSINESSES.find(b=>b.id===tile.fixed):drawBusiness(tile.category);if(!business){state.phase='end';setEvent('Все карточки этой категории уже в игре. Клетка свободна.');render();return}state.pending=index;state.offered=business;state.phase='offer';$('offerCard').innerHTML=cardMarkup(business);const price=priceFor(active(),business);$('buyButton').textContent=`Купить за ${rub(price)}`;$('buyButton').disabled=active().cash<price;$('offerFineText').textContent=`Отказ от покупки: штраф ${rub(DECLINE_FINE)} в банк. ${state.mode==='random'?'Карточка возвращается в конец колоды.':'Клетка остаётся свободной.'}`;$('offerDialog').showModal();setEvent(`Предложение: ${business.name} за ${rub(price)}.`);render()}
+function buy(){if(state.phase!=='offer')return;const player=active(),business=state.offered,index=state.pending,price=priceFor(player,business);if(player.cash<price)return;player.cash-=price;useDiscount(player,business);state.holdings.push({tileIndex:index,business,owner:state.turn,level:0});state.pending=null;state.offered=null;state.phase='end';$('offerDialog').close();setEvent(`${player.name} купил «${business.name}» за ${rub(price)}. Карточка добавлена в портфель.`);render();openDetail(index)}
+function decline(){if(state.phase!=='offer')return;const business=state.offered;if(state.mode==='random')state.businessDecks[business.category].push(business);const result=transfer(active(),DECLINE_FINE);state.pending=null;state.offered=null;state.phase='end';$('offerDialog').close();setEvent(`Отказ от «${business.name}»: ${rub(DECLINE_FINE)} в банк${result.borrowed?`, из них ${rub(result.borrowed)} в долг`:''}.`);render()}
+function drawCard(kind){const deck=state.decks[kind];if(!deck.length)state.decks[kind]=shuffle(CARDS[kind]);const card=state.decks[kind].shift(),player=active();let result='';if(card.effect==='cash'){if(card.value>=0){receive(player,card.value);result=`Получено ${rub(card.value)}.`}else{const payment=transfer(player,-card.value);result=`Оплачено ${rub(-card.value)}${payment.borrowed?` (долг +${rub(payment.borrowed)})`:''}.`}}else if(card.effect==='discount'){player.discount=card.value;result='Бонус сохранён в вашей панели до трёх применений.'}else if(card.effect==='shield'){player.shield++;result='Защита сохранена до следующей аренды.'}else if(card.effect==='salary'){player.salaryBonus+=card.value;result='Доплата придёт при следующем прохождении старта.'}$('eventDeck').textContent=kind==='chance'?'СЕВЕРНЫЙ ШАНС':'ГОРОДСКОЙ ФОНД';$('drawnCard').innerHTML=`<article class="dialog-card event"><div class="meta">${kind==='chance'?'КАРТА ШАНСА':'КАРТА ФОНДА'}</div><div class="symbol">${card.icon}</div><h3>${card.title}</h3><p>${card.text}</p><p>${result}</p></article>`;$('eventDialog').showModal();setEvent(`${card.title}. ${result}`)}
+function resolve(index){const tile=TILES[index],player=active(),holding=holdingAt(index);if(tile.kind==='business'){if(!holding){showOffer(index);return}if(holding.owner===state.turn)setEvent(`«${holding.business.name}» — ваше предприятие. Можно улучшить карточку в портфеле.`);else if(player.shield){player.shield--;setEvent(`Олень защитил от аренды «${holding.business.name}» (${rub(rentFor(holding.business,holding.level))}).`)}else{const due=rentFor(holding.business,holding.level),payment=transfer(player,due,state.players[holding.owner]);setEvent(`Аренда «${holding.business.name}»: ${rub(due)} игроку ${state.players[holding.owner].name}${payment.borrowed?` (заём ${rub(payment.borrowed)})`:''}.`)}}
+  else if(tile.kind==='chance'||tile.kind==='fund')drawCard(tile.kind);
+  else if(tile.kind==='tax'){const payment=transfer(player,tile.amount);setEvent(`${tile.name}: ${rub(tile.amount)} в банк${payment.borrowed?`, долг +${rub(payment.borrowed)}`:''}.`)}
+  else if(tile.kind==='jackpot'){const prize=[80,120,160][randomInt(3)];receive(player,prize);setEvent(`${tile.name}: банк выплатил ${rub(prize)}.`)}
+  else setEvent('Стартовая клетка. За прохождение полного круга банк платит 200 ₽.');
+  state.phase='end';render()}
+const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function roll(){if(state.phase!=='roll')return;state.phase='moving';render();const first=randomInt(6)+1,second=randomInt(6)+1,value=first+second;$('diceValue').textContent=`${DICE[first-1]} ${DICE[second-1]}`;const player=active();for(let step=0;step<value;step++){player.position=(player.position+1)%TILES.length;if(player.position===0){const oilIncome=state.holdings.filter(h=>h.owner===state.turn).reduce((sum,h)=>sum+(h.business.oil||0),0);const info=lap(player,oilIncome);setEvent(`Полный круг: +${rub(info.income)}${info.interest?`, проценты по долгу +${rub(info.interest)}`:''}.`)}renderBoard();await delay(90)}resolve(player.position)}
+function upgrade(){const holding=holdingAt(detailIndex);if(!holding||state.phase!=='end'||holding.owner!==state.turn||holding.level>=2)return;const player=active(),price=priceFor(player,holding.business,true);if(player.cash<price)return;player.cash-=price;useDiscount(player,holding.business);holding.level++;$('detailDialog').close();setEvent(`«${holding.business.name}» улучшено до уровня ${holding.level}. Потрачено ${rub(price)}, аренда ${rub(rentFor(holding.business,holding.level))}.`);render();openDetail(detailIndex)}
+function nextTurn(){if(state.phase!=='end')return;state.turnsTaken++;if(state.turnsTaken>=state.players.length*ROUND_LIMIT[state.players.length]){finish();return}state.turn=(state.turn+1)%state.players.length;state.phase='roll';$('diceValue').textContent='⚀ ⚀';setEvent(`${active().name}, бросайте кубики.`);render()}
+function finish(){state.phase='finished';render();const ranked=state.players.map((player,index)=>({player,index,total:netWorth(player,state.holdings.filter(h=>h.owner===index))})).sort((a,b)=>b.total-a.total||b.player.cash-a.player.cash);$('finishTitle').textContent=`${ranked[0].player.name} побеждает!`;$('finishScores').replaceChildren(...ranked.map((entry,rank)=>{const row=document.createElement('div');row.className='score-row';const name=document.createElement('span');name.textContent=`${rank+1}. ${entry.player.name}`;const total=document.createElement('strong');total.textContent=rub(entry.total);row.append(name,total);return row}));$('finishDialog').showModal();setEvent(`Партия завершена после ${ROUND_LIMIT[state.players.length]} раундов. Капитал победителя — ${rub(ranked[0].total)}.`)}
 
-function labelTexture(title,icon){
-  const canvas=document.createElement('canvas');canvas.width=384;canvas.height=256;
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,384,256);ctx.fillStyle='#15313a';ctx.textAlign='center';
-  ctx.font='bold 68px Arial';ctx.fillText(icon,192,84);
-  ctx.font='bold 29px Manrope, Arial';
-  const words=title.split(' ');let lines=[''];
-  words.forEach(word=>{const test=lines[lines.length-1]+' '+word;if(ctx.measureText(test).width>340&&lines[lines.length-1])lines.push(word);else lines[lines.length-1]=test.trim()});
-  lines.slice(0,3).forEach((line,i)=>ctx.fillText(line,192,145+i*34));
-  const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return tex;
-}
-
-function pine(x,z,size=1,parent=board){
-  const trunk=material(0x7d5845),leaf=material(0x214c4a);
-  box(.09*size,.4*size,.09*size,trunk,x,.26*size,z,parent);
-  cone(.31*size,.66*size,leaf,x,.64*size,z,parent);
-  cone(.24*size,.55*size,leaf,x,.94*size,z,parent);
-  cone(.17*size,.43*size,leaf,x,1.18*size,z,parent);
-}
-function house(x,z,size=1,parent=board){
-  const wall=material(0xe9d9ad),roof=material(0xb8674b),light=new THREE.MeshStandardMaterial({color:0xf6c573,emissive:0xe58e46,emissiveIntensity:.25});
-  box(.5*size,.46*size,.43*size,wall,x,.28*size,z,parent);
-  const top=cone(.4*size,.29*size,roof,x,.67*size,z,parent);top.rotation.y=Math.PI/4;
-  box(.12*size,.12*size,.006*size,light,x,.32*size,z+.218*size,parent);
-}
-function deer(x,z,size=1,parent=board){
-  const fur=material(0xb8916c),antler=material(0xe6d0a2);
-  const body=sphere(.24*size,fur,x,.43*size,z,parent);body.scale.set(1.5,.8,.75);
-  box(.1*size,.32*size,.1*size,fur,x-.2*size,.18*size,z-.12*size,parent);
-  box(.1*size,.32*size,.1*size,fur,x+.18*size,.18*size,z+.1*size,parent);
-  const neck=box(.13*size,.39*size,.14*size,fur,x+.29*size,.62*size,z,parent);neck.rotation.z=-.22;
-  sphere(.14*size,fur,x+.38*size,.85*size,z,parent);
-  for(const side of [-1,1]){const a=box(.025*size,.32*size,.025*size,antler,x+.37*size,1.08*size,z+side*.09*size,parent);a.rotation.x=side*.38;}
-}
-function oilPump(x,z,parent=board){
-  const steel=material(0x8d6654),dark=material(0x183f49);
-  box(.58,.05,.4,dark,x,.05,z,parent);box(.06,.52,.06,steel,x-.12,.3,z,parent);
-  const pivot=new THREE.Group();pivot.position.set(x-.12,.61,z);parent.add(pivot);
-  box(.8,.08,.1,steel,.2,0,0,pivot);
-  box(.14,.17,.14,material(0xe1a85a),-.29,-.08,0,pivot);
-  box(.045,.34,.045,dark,.54,-.23,0,pivot);
-  pumpBeams.push(pivot);
-}
-function cloudberry(x,z,parent=board){
-  const orange=material(0xf3954d),green=material(0x4c8466);
-  for(let i=0;i<4;i++){const angle=i*Math.PI/2;sphere(.08,orange,x+Math.cos(angle)*.09,.33,z+Math.sin(angle)*.09,parent)}
-  sphere(.09,orange,x,.39,z,parent);cone(.13,.15,green,x,.52,z,parent);
-}
-function tileDecoration(tile,x,z,group){
-  if(tile.kind==='berry'){cloudberry(x-.33,z-.35,group);cloudberry(x+.35,z+.33,group)}
-  if(tile.kind==='plot'&&tile.icon==='♠')pine(x-.38,z-.37,.42,group);
-  if(tile.kind==='plot'&&tile.icon==='♣')pine(x-.38,z-.37,.35,group);
-  if(tile.kind==='plot'&&tile.icon==='⌂')house(x-.36,z-.35,.5,group);
-  if(tile.icon==='◆')oilPump(x-.3,z-.3,group);
-  if(tile.kind==='deer')deer(x-.26,z-.28,.55,group);
-  if(tile.kind==='jackpot')sphere(.16,material(0xf5c376),x-.35,.48,z-.33,group);
-}
-
-function makeBoard(){
-  board=new THREE.Group();scene.add(board);
-  const edge=material(0x9c744f),side=material(0x6e503b),top=material(0x244f50),snow=material(0xeff1df),path=material(0x8fa99c);
-  box(11.05,.45,11.05,side,0,-.39,0);
-  box(10.95,.12,10.95,edge,0,-.11,0);
-  box(10.55,.09,10.55,top,0,-.025,0);
-  box(7.3,.08,7.3,path,0,.055,0);
-  box(6.6,.04,6.6,snow,0,.11,0);
-  const center=box(5.45,.14,5.45,material(0x326067),0,.18,0);center.receiveShadow=true;
-  box(2.6,.14,1.45,material(0x4a7b77),0,.31,.35);
-  for(let i=0;i<16;i++){const a=i*2.3999;const radius=1.5+(i%3)*.43;pine(Math.cos(a)*radius,Math.sin(a)*radius,.45+(i%4)*.13)}
-  house(-.5,-.4,.8);house(.65,-.75,.64);house(.35,.9,.58);
-  oilPump(-1.3,.1);deer(1.4,.35,.85);
-  const disc=mesh(new THREE.CylinderGeometry(.7,.7,.12,32),material(0xf1b46d),0,.37,.25);
-  disc.receiveShadow=true;
-  for(let i=0;i<TILE_DATA.length;i++){
-    const tile=TILE_DATA[i],pos=coord(i),group=new THREE.Group();board.add(group);
-    const topMat=material(kindColors[tile.kind]);
-    const tileMesh=box(1.46,.16,1.46,topMat,pos.x,.22,pos.z,group);
-    tileMesh.userData.tileIndex=i;tileMeshes.push(tileMesh);
-    const tex=labelTexture(tile.name,tile.icon);
-    const label=new THREE.Mesh(new THREE.PlaneGeometry(1.27,.9),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));
-    label.rotation.x=-Math.PI/2;label.position.set(pos.x,.306,pos.z+.1);group.add(label);
-    const marker=mesh(new THREE.CylinderGeometry(.115,.115,.04,16),material(0xffffff),pos.x+.52,.34,pos.z-.52,group);
-    marker.visible=false;ownerMarkers.push(marker);
-    tileDecoration(tile,pos.x,pos.z,group);
-  }
-}
-
-function makeToken(color,index){
-  const token=new THREE.Group();board.add(token);
-  const coat=material(color,.38),cream=material(0xfff2d8);
-  const base=mesh(new THREE.CylinderGeometry(.19,.23,.11,20),coat,0,.44,0,token);
-  base.castShadow=true;
-  cone(.18,.38,coat,0,.66,0,token);
-  sphere(.14,cream,0,.9,0,token);
-  const pom=sphere(.085,coat,0,1.03,0,token);
-  pom.castShadow=true;
-  token.userData.index=index;tokenMeshes.push(token);return token;
-}
-function tokenPosition(player,index){const pos=coord(player.position);const offsets=[[-.22,-.22],[.22,-.22],[-.22,.22],[.22,.22]];return new THREE.Vector3(pos.x+offsets[index][0],0,pos.z+offsets[index][1])}
-function updateTokens(){tokenMeshes.forEach((token,index)=>{token.visible=Boolean(players[index]);if(players[index])token.position.copy(tokenPosition(players[index],index))});render()}
-function updateOwnerMarkers(){ownerMarkers.forEach((marker,index)=>{const owner=owners[index];marker.visible=owner!==null; if(owner!==null)marker.material.color.setHex(COLORS[owner])});render()}
-
-function initThree(){
-  try{
-    renderer=new THREE.WebGLRenderer({canvas:$('gameCanvas'),antialias:true,alpha:true,powerPreference:'high-performance'});
-    renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;
-    renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-    scene=new THREE.Scene();scene.background=new THREE.Color(0x153846);
-    scene.fog=new THREE.Fog(0x153846,25,45);
-    camera=new THREE.PerspectiveCamera(40,1,.1,90);
-    scene.add(new THREE.HemisphereLight(0xdaf7f3,0x4b5e63,2.7));
-    const light=new THREE.DirectionalLight(0xffdbab,3.6);light.position.set(-5,13,7);light.castShadow=true;light.shadow.mapSize.set(2048,2048);light.shadow.camera.left=-9;light.shadow.camera.right=9;light.shadow.camera.top=9;light.shadow.camera.bottom=-9;scene.add(light);
-    const rim=new THREE.DirectionalLight(0x7dc6d3,1.5);rim.position.set(6,5,-8);scene.add(rim);
-    const ground=mesh(new THREE.CircleGeometry(19,64),material(0x153846),0,-.65,0,scene);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;
-    raycaster=new THREE.Raycaster();makeBoard();for(let i=0;i<4;i++)makeToken(COLORS[i],i);
-    resize();updateCamera();$('sceneStatus').textContent='ПОЛЕ ГОТОВО';
-    new ResizeObserver(resize).observe(sceneWrap);
-    new IntersectionObserver(entries=>{sceneVisible=entries[0].isIntersecting;if(sceneVisible)render()},{threshold:.01}).observe(sceneWrap);
-    let last=0;function animate(time){requestAnimationFrame(animate);if(!sceneVisible||document.hidden||reducedMotion.matches||time-last<32)return;last=time;pumpBeams.forEach((beam,i)=>beam.rotation.z=Math.sin(time*.0013+i)*.2);render()}requestAnimationFrame(animate);
-  }catch(error){console.error(error);$('sceneFallback').hidden=false;$('sceneStatus').textContent='WEBGL НЕДОСТУПЕН';}
-}
-function resize(){if(!renderer)return;const rect=sceneWrap.getBoundingClientRect();renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));renderer.setSize(Math.max(1,rect.width),Math.max(1,rect.height),false);camera.aspect=rect.width/Math.max(1,rect.height);camera.updateProjectionMatrix();render()}
-function updateCamera(){camera.position.set(Math.sin(theta)*Math.sin(phi)*distance,Math.cos(phi)*distance,Math.cos(theta)*Math.sin(phi)*distance);camera.lookAt(0,0,0);render()}
-function render(){if(renderer&&sceneVisible)renderer.render(scene,camera)}
-
-const canvas=$('gameCanvas');
-canvas.addEventListener('pointerdown',event=>{pointerStart={x:event.clientX,y:event.clientY,theta,phi,id:event.pointerId};canvas.setPointerCapture(event.pointerId)});
-canvas.addEventListener('pointermove',event=>{if(!pointerStart||event.pointerId!==pointerStart.id)return;const dx=event.clientX-pointerStart.x,dy=event.clientY-pointerStart.y;theta=pointerStart.theta-dx*.006;phi=Math.max(.35,Math.min(1.35,pointerStart.phi+dy*.005));updateCamera()});
-canvas.addEventListener('pointerup',event=>{if(!pointerStart||event.pointerId!==pointerStart.id)return;const moved=Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)>8;pointerStart=null;if(!moved)inspectTile(event)});
-canvas.addEventListener('pointercancel',()=>pointerStart=null);
-canvas.addEventListener('wheel',event=>{event.preventDefault();distance=Math.max(13,Math.min(29,distance+event.deltaY*.015));updateCamera()},{passive:false});
-$('resetCamera').addEventListener('click',()=>{theta=.62;phi=.94;distance=19;updateCamera()});
-function inspectTile(event){if(!renderer)return;const rect=canvas.getBoundingClientRect();const mouse=new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(tileMeshes);if(!hits.length)return;const index=hits[0].object.userData.tileIndex;showDeed(index)}
-function showDeed(index){const tile=TILE_DATA[index],level=owners[index]===null?0:(players[owners[index]].levels[index]||0);$('tileDialogType').textContent=tile.kind==='plot'?'КАРТОЧКА ПРЕДПРИЯТИЯ':'КЛЕТКА ПОЛЯ';$('tileDialogIcon').textContent=tile.icon;$('tileDialogTitle').textContent=tile.name;$('tileDialogText').textContent=tile.text+(tile.price?` Цена ${rub(tile.price)} · аренда ${rub(rentFor(tile,level))} · улучшение ${rub(tile.upgrade)} · уровень ${level}/2.`:'');tileDialog.showModal()}
-
-function setEvent(text){$('eventText').textContent=text}
-function activePlayer(){return players[turn]}
-function updateUI(){
-  const current=activePlayer();roundLabel.textContent=`РАУНД ${Math.min(ROUNDS,Math.floor(turnsTaken/players.length)+1)} / ${ROUNDS}`;
-  $('turnName').textContent=current.name;$('turnColor').style.background=`#${COLORS[turn].toString(16).padStart(6,'0')}`;
-  $('turnSubtitle').textContent=phase==='roll'?'Бросайте два кубика!':phase==='choice'?'Решите, покупать ли актив.':phase==='end'?'Улучшите актив или передайте ход.':'Идёт ход...';
-  $('playersList').replaceChildren(...players.map((p,i)=>{const row=document.createElement('div');row.className='player-row'+(i===turn?' active':'');const name=document.createElement('span');name.className='player-name';const dot=document.createElement('i');dot.className='player-dot';dot.style.background=`#${COLORS[i].toString(16).padStart(6,'0')}`;name.append(dot,document.createTextNode(p.name));const score=document.createElement('strong');score.textContent=`${rub(p.cash)} · ${p.owned.length} активов${p.bankrupt?' · БАНКРОТ':''}`;row.append(name,score);return row}));
-  $('walletAmount').textContent=rub(current.cash);
-  $('discountStatus').textContent=current.discount>0?`Карта «Морошка»: осталось ${current.discount} примен.`:'Карта «Морошка» не активна';
-  const upgrade=$('upgradeSelect');upgrade.replaceChildren(...current.owned.filter(index=>(current.levels[index]||0)<2).map(index=>{const option=document.createElement('option');option.value=index;option.textContent=`${TILE_DATA[index].name} · ${rub(discounted(TILE_DATA[index].upgrade,discountFor(current,TILE_DATA[index])))}`;return option}));
-  $('upgradeButton').disabled=phase!=='end'||!upgrade.options.length||current.cash<discounted(TILE_DATA[Number(upgrade.value)]?.upgrade||0,discountFor(current,TILE_DATA[Number(upgrade.value)]));
-  $('upgradeArea').hidden=phase!=='end'||!upgrade.options.length;
-  rollButton.hidden=phase!=='roll';rollButton.disabled=phase!=='roll';choiceActions.hidden=phase!=='choice';endTurnButton.hidden=phase!=='end';
-}
-function startGame(count){
-  players=Array.from({length:count},(_,i)=>({name:`Игрок ${i+1}`,cash:START_CASH,position:0,owned:[],levels:{},discount:0,bankrupt:false}));
-  owners=Array(TILE_DATA.length).fill(null);turn=0;turnsTaken=0;phase='roll';pendingTile=-1;
-  $('diceFace').textContent='⚀ ⚀';$('diceText').textContent='Первый ход за вами.';setEvent('На старте у каждого 1 500 ₽. Покупайте активы, собирайте аренду и улучшайте предприятия.');updateTokens();updateOwnerMarkers();updateUI();
-}
-function pause(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
-async function roll(){
-  if(phase!=='roll')return;phase='moving';updateUI();const a=Math.floor(Math.random()*6)+1,b=Math.floor(Math.random()*6)+1,value=a+b;
-  $('diceFace').textContent=`${DICE[a-1]} ${DICE[b-1]}`;$('diceText').textContent=`Выпало ${a} + ${b} = ${value}.`;
-  const player=activePlayer();
-  for(let step=0;step<value;step++){
-    player.position=(player.position+1)%TILE_DATA.length;
-    if(player.position===0){player.cash+=LAP_SALARY;const oil=owners[13]===turn?80:0;player.cash+=oil;setEvent(`Полный круг: зарплата ${rub(LAP_SALARY)}${oil?` и доход нефтяной качалки ${rub(oil)}`:''}.`)}
-    updateTokens();await pause(160);
-  }
-  resolveTile(player.position);updateUI();
-}
-function discountFor(player,tile){return player.discount>0&&['отдых','культура','сервис'].includes(tile?.category)?10:0}
-function charge(amount,recipient=null){const player=activePlayer();const result=pay(player,amount);if(recipient!==null)players[recipient].cash+=result.paid;if(result.shortfall){player.bankrupt=true;for(const index of player.owned)owners[index]=null;player.owned=[];player.levels={};updateOwnerMarkers()}return result}
-function cardDraw(kind){const cards=CARDS[kind],card=cards[Math.floor(Math.random()*cards.length)],player=activePlayer();if(card.type==='discount')player.discount=card.value;else if(card.value>=0)player.cash+=card.value;else charge(-card.value);$('cardType').textContent=kind==='chance'?'СЕВЕРНЫЙ ШАНС':'ГОРОДСКОЙ ФОНД';$('cardTitle').textContent=card.title;$('cardText').textContent=card.text;$('cardDialog').showModal();return `${card.title}: ${card.text}`}
-function resolveTile(index){
-  const tile=TILE_DATA[index],player=activePlayer();let event='';
-  if(tile.kind==='plot'){
-    const owner=owners[index];
-    const price=discounted(tile.price,discountFor(player,tile));
-    if(owner===null){if(player.cash>=price){pendingTile=index;phase='choice';event=`${tile.name}: карточка актива доступна за ${rub(price)}. Базовая аренда — ${rub(tile.rent)}.`;$('buyButton').textContent=`Купить за ${rub(price)}`;showDeed(index)}
-      else{phase='end';event=`${tile.name} свободно, но для покупки нужны ${rub(price)}.`}}
-    else if(owner===turn){phase='end';event=`${tile.name} уже ваше. Отдохните перед следующим ходом.`}
-    else{const due=rentFor(tile,players[owner].levels[index]||0),result=charge(due,owner);phase='end';event=`Аренда «${tile.name}»: ${rub(result.paid)} → ${players[owner].name}${result.shortfall?' (банкротство)':''}.`}
-  }else if(tile.kind==='chance'||tile.kind==='fund'){phase='end';event=cardDraw(tile.kind)}
-  else if(tile.kind==='tax'){const result=charge(tile.cost);phase='end';event=`${tile.name}: оплачено ${rub(result.paid)} в банк.`}
-  else if(tile.kind==='jackpot'){phase='end';const prize=[100,150,200][Math.floor(Math.random()*3)];player.cash+=prize;event=`${tile.name}: банк выплачивает ${rub(prize)}!`}
-  else{phase='end';event=tile.text}
-  setEvent(event);$('diceText').textContent=`${player.name} попал на «${tile.name}».`;
-}
-function buy(){if(phase!=='choice'||pendingTile<0)return;const tile=TILE_DATA[pendingTile],player=activePlayer(),discount=discountFor(player,tile),price=discounted(tile.price,discount);if(player.cash<price)return;player.cash-=price;if(discount)player.discount--;player.owned.push(pendingTile);owners[pendingTile]=turn;setEvent(`${player.name} купил «${tile.name}» за ${rub(price)}${discount?' со скидкой карты «Морошка»':''}.`);pendingTile=-1;phase='end';updateOwnerMarkers();updateUI()}
-function upgrade(){if(phase!=='end')return;const index=Number($('upgradeSelect').value),tile=TILE_DATA[index],player=activePlayer();if(!tile||owners[index]!==turn||(player.levels[index]||0)>=2)return;const discount=discountFor(player,tile),price=discounted(tile.upgrade,discount);if(player.cash<price)return;player.cash-=price;player.levels[index]=(player.levels[index]||0)+1;if(discount)player.discount--;setEvent(`Улучшено «${tile.name}» до уровня ${player.levels[index]}. Потрачено ${rub(price)}, новая аренда ${rub(rentFor(tile,player.levels[index]))}.`);updateUI()}
-function pass(){if(phase!=='choice')return;setEvent(`${activePlayer().name} оставил «${TILE_DATA[pendingTile].name}» свободным.`);pendingTile=-1;phase='end';updateUI()}
-function finishTurn(){if(phase!=='end')return;turnsTaken++;if(turnsTaken>=players.length*ROUNDS||players.filter(p=>!p.bankrupt).length<=1){finishGame();return}do{turn=(turn+1)%players.length}while(players[turn].bankrupt);phase='roll';$('diceFace').textContent='⚀ ⚀';$('diceText').textContent='Теперь ваш ход.';setEvent(`${activePlayer().name}, бросайте кубики!`);updateUI()}
-function finishGame(){phase='finished';const ranked=players.map((p,i)=>({name:p.name,cash:p.cash,total:p.bankrupt?-1:netWorth(p,TILE_DATA),index:i})).sort((a,b)=>b.total-a.total||b.cash-a.cash);const winner=ranked[0];$('winnerTitle').textContent=`${winner.name} победил!`;$('winnerText').textContent=`Капитал ${rub(winner.total)}: наличные ${rub(winner.cash)} + стоимость активов и улучшений. ${ranked.slice(1).map(p=>`${p.name}: ${p.total<0?'банкрот':rub(p.total)}`).join(' · ')}`;setEvent(`Партия завершена. Победил ${winner.name}!`);updateUI();winnerDialog.showModal()}
-
-$('setupForm').addEventListener('submit',event=>{if(event.submitter?.value!=='start')return;const count=Number(new FormData(event.currentTarget).get('playerCount'));startGame(count)});
-$('newGameButton').addEventListener('click',()=>setupDialog.showModal());
-$('playAgainButton').addEventListener('click',()=>{setTimeout(()=>setupDialog.showModal(),0)});
-rollButton.addEventListener('click',roll);$('buyButton').addEventListener('click',buy);$('passButton').addEventListener('click',pass);$('upgradeButton').addEventListener('click',upgrade);$('upgradeSelect').addEventListener('change',updateUI);endTurnButton.addEventListener('click',finishTurn);
-initThree();setupDialog.showModal();
+$('setupForm').addEventListener('submit',event=>{event.preventDefault();if(event.submitter?.value!=='start')return;const data=new FormData(event.currentTarget);$('setupDialog').close();startGame(Number(data.get('count')),data.get('mode'))});
+$('newGameButton').addEventListener('click',()=>{if(!$('setupDialog').open)$('setupDialog').showModal()});
+$('againButton').addEventListener('click',()=>{$('finishDialog').close();$('setupDialog').showModal()});
+$('rollButton').addEventListener('click',roll);$('nextButton').addEventListener('click',nextTurn);$('buyButton').addEventListener('click',buy);$('declineButton').addEventListener('click',decline);$('upgradeButton').addEventListener('click',upgrade);
+$('repayButton').addEventListener('click',()=>{if(state.phase!=='end')return;const amount=repay(active(),100);setEvent(`Долг погашен на ${rub(amount)}.`);render()});
+document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>{const id=button.dataset.close;if(id==='offerDialog'){decline();return}$(id).close()}));
+$('offerDialog').addEventListener('cancel',event=>event.preventDefault());
+startGame(2,'random');$('setupDialog').showModal();
