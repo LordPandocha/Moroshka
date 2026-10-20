@@ -1,7 +1,8 @@
 import * as THREE from './vendor/three.module.js';
+import {START_CASH, LAP_SALARY, ROUNDS, rub, discounted, rentFor, netWorth, pay} from './economy.js';
 
 const TILE_DATA = [
-  {name:'Старт',kind:'start',icon:'↗',text:'Начало северного маршрута. За каждый пройденный круг получите 2 морошки.'},
+  {name:'Старт',kind:'start',icon:'↗',text:'Каждый полный круг приносит 200 ₽ зарплаты.'},
   {name:'Парковый бульвар',kind:'plot',icon:'♣',price:3,rent:1,text:'Любимое пространство для прогулок. Купите его и получайте аренду.'},
   {name:'Морошковая поляна',kind:'berry',icon:'✳',reward:2,text:'Ягоды поспели! Возьмите 2 морошки.'},
   {name:'Городской музей',kind:'plot',icon:'▣',price:4,rent:2,text:'Эколого-краеведческий музей хранит истории города. Его можно купить в игре.'},
@@ -27,6 +28,33 @@ const TILE_DATA = [
   {name:'Ягодный привал',kind:'berry',icon:'✳',reward:2,text:'Перед новым кругом возьмите ещё 2 морошки.'}
 ];
 
+const PRICES = {1:[160,30,90,'отдых'],3:[180,35,100,'культура'],7:[170,30,90,'культура'],9:[150,25,80,'отдых'],13:[320,70,160,'энергия'],15:[190,35,100,'сервис'],17:[240,45,120,'транспорт'],20:[180,35,100,'отдых'],22:[220,40,110,'природа']};
+for (const [index, [price,rent,upgrade,category]] of Object.entries(PRICES)) Object.assign(TILE_DATA[index],{price,rent,upgrade,category});
+TILE_DATA[13].name='Нефтяная качалка';
+TILE_DATA[13].text='Промышленный актив: аренда при визите соперника и 80 ₽ добычного дохода за каждый круг владельца.';
+for(const index of [2,8,11,12,18,23]){TILE_DATA[index].kind='chance';TILE_DATA[index].icon='✦';TILE_DATA[index].name='Северный шанс';TILE_DATA[index].text='Возьмите карту северного шанса.'}
+for(const index of [5,10,14,21]){TILE_DATA[index].kind='fund';TILE_DATA[index].icon='◇';TILE_DATA[index].name='Городской фонд';TILE_DATA[index].text='Возьмите карту городского фонда.'}
+TILE_DATA[4]={name:'Северные расходы',kind:'tax',icon:'−',cost:80,text:'Платёж в банк: 80 ₽.'};
+TILE_DATA[19]={name:'Зимние расходы',kind:'tax',icon:'−',cost:100,text:'Платёж в банк: 100 ₽.'};
+TILE_DATA[6]={name:'Морошковый джекпот',kind:'jackpot',icon:'★',text:'Случайный денежный приз.'};
+TILE_DATA[16]={name:'Олений джекпот',kind:'jackpot',icon:'★',text:'Случайный денежный приз.'};
+const CARDS = {
+ chance:[
+  {title:'Карта «Морошка»',text:'Три покупки или улучшения предприятий категорий «отдых», «культура» и «сервис» со скидкой 10%.',type:'discount',value:3},
+  {title:'Удачная ярмарка',text:'Продажа северных сувениров: получите из банка 140 ₽.',type:'cash',value:140},
+  {title:'Помощь оленеводам',text:'Передайте в городской фонд 70 ₽.',type:'cash',value:-70},
+  {title:'Северная поставка',text:'Банк выплачивает вам 100 ₽.',type:'cash',value:100},
+  {title:'Ремонт техники',text:'Потратьте 90 ₽ на ремонт.',type:'cash',value:-90}
+ ],
+ fund:[
+  {title:'Дорога к отпуску',text:'Игровая компенсация поездки: получите 120 ₽. Реальная льгота зависит от условий закона и работодателя.',type:'cash',value:120},
+  {title:'Северная надбавка',text:'Игровая премия за труд на Севере: получите 100 ₽.',type:'cash',value:100},
+  {title:'Районный коэффициент',text:'Разовый игровой бонус к зарплате: получите 80 ₽.',type:'cash',value:80},
+  {title:'Городской субботник',text:'Вклад в город: заплатите 60 ₽ в банк.',type:'cash',value:-60},
+  {title:'Семейный фестиваль',text:'Городской фонд выплачивает 110 ₽.',type:'cash',value:110}
+ ]
+};
+
 const POSITIONS = [];
 for(let c=0;c<7;c++) POSITIONS.push([0,c]);
 for(let r=1;r<7;r++) POSITIONS.push([r,6]);
@@ -34,7 +62,7 @@ for(let c=5;c>=0;c--) POSITIONS.push([6,c]);
 for(let r=5;r>=1;r--) POSITIONS.push([r,0]);
 const COLORS = [0xf18b50,0x77c8bb,0xecc867,0xb89fe1];
 const DICE = ['⚀','⚁','⚂','⚃','⚄','⚅'];
-const kindColors = {start:0xf2ad70,plot:0xe7e2cb,berry:0xb4d4b7,storm:0xc1d7df,deer:0xd9c8a6,jackpot:0xf4b257,bonus:0xc9dec7};
+const kindColors = {start:0xf2ad70,plot:0xe7e2cb,chance:0xd3b182,fund:0xa5c3bd,tax:0xb7776d,jackpot:0xf4b257};
 const $ = id => document.getElementById(id);
 const sceneWrap = $('sceneWrap');
 const setupDialog = $('setupDialog');
@@ -187,56 +215,66 @@ canvas.addEventListener('pointerup',event=>{if(!pointerStart||event.pointerId!==
 canvas.addEventListener('pointercancel',()=>pointerStart=null);
 canvas.addEventListener('wheel',event=>{event.preventDefault();distance=Math.max(13,Math.min(29,distance+event.deltaY*.015));updateCamera()},{passive:false});
 $('resetCamera').addEventListener('click',()=>{theta=.62;phi=.94;distance=19;updateCamera()});
-function inspectTile(event){if(!renderer)return;const rect=canvas.getBoundingClientRect();const mouse=new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(tileMeshes);if(!hits.length)return;const tile=TILE_DATA[hits[0].object.userData.tileIndex];$('tileDialogType').textContent=tile.kind==='plot'?'ГОРОДСКОЕ МЕСТО':'ИГРОВОЕ СОБЫТИЕ';$('tileDialogIcon').textContent=tile.icon;$('tileDialogTitle').textContent=tile.name;$('tileDialogText').textContent=tile.text+(tile.price?` Цена: ${tile.price} морошки. Аренда: ${tile.rent}.`:'');tileDialog.showModal()}
+function inspectTile(event){if(!renderer)return;const rect=canvas.getBoundingClientRect();const mouse=new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(tileMeshes);if(!hits.length)return;const index=hits[0].object.userData.tileIndex;showDeed(index)}
+function showDeed(index){const tile=TILE_DATA[index],level=owners[index]===null?0:(players[owners[index]].levels[index]||0);$('tileDialogType').textContent=tile.kind==='plot'?'КАРТОЧКА ПРЕДПРИЯТИЯ':'КЛЕТКА ПОЛЯ';$('tileDialogIcon').textContent=tile.icon;$('tileDialogTitle').textContent=tile.name;$('tileDialogText').textContent=tile.text+(tile.price?` Цена ${rub(tile.price)} · аренда ${rub(rentFor(tile,level))} · улучшение ${rub(tile.upgrade)} · уровень ${level}/2.`:'');tileDialog.showModal()}
 
 function setEvent(text){$('eventText').textContent=text}
 function activePlayer(){return players[turn]}
 function updateUI(){
-  const current=activePlayer();roundLabel.textContent=`РАУНД ${Math.min(8,Math.floor(turnsTaken/players.length)+1)} / 8`;
+  const current=activePlayer();roundLabel.textContent=`РАУНД ${Math.min(ROUNDS,Math.floor(turnsTaken/players.length)+1)} / ${ROUNDS}`;
   $('turnName').textContent=current.name;$('turnColor').style.background=`#${COLORS[turn].toString(16).padStart(6,'0')}`;
-  $('turnSubtitle').textContent=phase==='roll'?'Бросайте кубик!':phase==='choice'?'Решите, покупать ли место.':phase==='end'?'Передайте ход дальше.':'Идёт ход...';
-  $('playersList').replaceChildren(...players.map((p,i)=>{const row=document.createElement('div');row.className='player-row'+(i===turn?' active':'');const name=document.createElement('span');name.className='player-name';const dot=document.createElement('i');dot.className='player-dot';dot.style.background=`#${COLORS[i].toString(16).padStart(6,'0')}`;name.append(dot,document.createTextNode(p.name));const score=document.createElement('strong');score.textContent=`✳ ${p.berries}  ·  ♞ ${p.deer}  ·  ⌂ ${p.owned.length}`;row.append(name,score);return row}));
+  $('turnSubtitle').textContent=phase==='roll'?'Бросайте два кубика!':phase==='choice'?'Решите, покупать ли актив.':phase==='end'?'Улучшите актив или передайте ход.':'Идёт ход...';
+  $('playersList').replaceChildren(...players.map((p,i)=>{const row=document.createElement('div');row.className='player-row'+(i===turn?' active':'');const name=document.createElement('span');name.className='player-name';const dot=document.createElement('i');dot.className='player-dot';dot.style.background=`#${COLORS[i].toString(16).padStart(6,'0')}`;name.append(dot,document.createTextNode(p.name));const score=document.createElement('strong');score.textContent=`${rub(p.cash)} · ${p.owned.length} активов${p.bankrupt?' · БАНКРОТ':''}`;row.append(name,score);return row}));
+  $('walletAmount').textContent=rub(current.cash);
+  $('discountStatus').textContent=current.discount>0?`Карта «Морошка»: осталось ${current.discount} примен.`:'Карта «Морошка» не активна';
+  const upgrade=$('upgradeSelect');upgrade.replaceChildren(...current.owned.filter(index=>(current.levels[index]||0)<2).map(index=>{const option=document.createElement('option');option.value=index;option.textContent=`${TILE_DATA[index].name} · ${rub(discounted(TILE_DATA[index].upgrade,discountFor(current,TILE_DATA[index])))}`;return option}));
+  $('upgradeButton').disabled=phase!=='end'||!upgrade.options.length||current.cash<discounted(TILE_DATA[Number(upgrade.value)]?.upgrade||0,discountFor(current,TILE_DATA[Number(upgrade.value)]));
+  $('upgradeArea').hidden=phase!=='end'||!upgrade.options.length;
   rollButton.hidden=phase!=='roll';rollButton.disabled=phase!=='roll';choiceActions.hidden=phase!=='choice';endTurnButton.hidden=phase!=='end';
 }
 function startGame(count){
-  players=Array.from({length:count},(_,i)=>({name:`Игрок ${i+1}`,berries:6,deer:0,position:0,owned:[]}));
+  players=Array.from({length:count},(_,i)=>({name:`Игрок ${i+1}`,cash:START_CASH,position:0,owned:[],levels:{},discount:0,bankrupt:false}));
   owners=Array(TILE_DATA.length).fill(null);turn=0;turnsTaken=0;phase='roll';pendingTile=-1;
-  $('diceFace').textContent='⚀';$('diceText').textContent='Первый ход за вами.';setEvent('Исследуйте поле и бросьте кубик. Удачи!');updateTokens();updateOwnerMarkers();updateUI();
+  $('diceFace').textContent='⚀ ⚀';$('diceText').textContent='Первый ход за вами.';setEvent('На старте у каждого 1 500 ₽. Покупайте активы, собирайте аренду и улучшайте предприятия.');updateTokens();updateOwnerMarkers();updateUI();
 }
 function pause(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 async function roll(){
-  if(phase!=='roll')return;phase='moving';updateUI();const value=Math.floor(Math.random()*6)+1;
-  $('diceFace').textContent=DICE[value-1];$('diceText').textContent=`Выпало ${value}. Фишка идёт по полю.`;
+  if(phase!=='roll')return;phase='moving';updateUI();const a=Math.floor(Math.random()*6)+1,b=Math.floor(Math.random()*6)+1,value=a+b;
+  $('diceFace').textContent=`${DICE[a-1]} ${DICE[b-1]}`;$('diceText').textContent=`Выпало ${a} + ${b} = ${value}.`;
   const player=activePlayer();
   for(let step=0;step<value;step++){
     player.position=(player.position+1)%TILE_DATA.length;
-    if(player.position===0){player.berries+=2;setEvent('Полный круг! +2 морошки за возвращение на старт.')}
+    if(player.position===0){player.cash+=LAP_SALARY;const oil=owners[13]===turn?80:0;player.cash+=oil;setEvent(`Полный круг: зарплата ${rub(LAP_SALARY)}${oil?` и доход нефтяной качалки ${rub(oil)}`:''}.`)}
     updateTokens();await pause(160);
   }
   resolveTile(player.position);updateUI();
 }
+function discountFor(player,tile){return player.discount>0&&['отдых','культура','сервис'].includes(tile?.category)?10:0}
+function charge(amount,recipient=null){const player=activePlayer();const result=pay(player,amount);if(recipient!==null)players[recipient].cash+=result.paid;if(result.shortfall){player.bankrupt=true;for(const index of player.owned)owners[index]=null;player.owned=[];player.levels={};updateOwnerMarkers()}return result}
+function cardDraw(kind){const cards=CARDS[kind],card=cards[Math.floor(Math.random()*cards.length)],player=activePlayer();if(card.type==='discount')player.discount=card.value;else if(card.value>=0)player.cash+=card.value;else charge(-card.value);$('cardType').textContent=kind==='chance'?'СЕВЕРНЫЙ ШАНС':'ГОРОДСКОЙ ФОНД';$('cardTitle').textContent=card.title;$('cardText').textContent=card.text;$('cardDialog').showModal();return `${card.title}: ${card.text}`}
 function resolveTile(index){
   const tile=TILE_DATA[index],player=activePlayer();let event='';
   if(tile.kind==='plot'){
     const owner=owners[index];
-    if(owner===null){if(player.berries>=tile.price){pendingTile=index;phase='choice';event=`${tile.name}: можно купить за ${tile.price} морошки. Аренда — ${tile.rent}.`;$('buyButton').textContent=`Купить за ${tile.price} ✳`}
-      else{phase='end';event=`${tile.name} свободно, но не хватает морошек для покупки (${tile.price}).`}}
+    const price=discounted(tile.price,discountFor(player,tile));
+    if(owner===null){if(player.cash>=price){pendingTile=index;phase='choice';event=`${tile.name}: карточка актива доступна за ${rub(price)}. Базовая аренда — ${rub(tile.rent)}.`;$('buyButton').textContent=`Купить за ${rub(price)}`;showDeed(index)}
+      else{phase='end';event=`${tile.name} свободно, но для покупки нужны ${rub(price)}.`}}
     else if(owner===turn){phase='end';event=`${tile.name} уже ваше. Отдохните перед следующим ходом.`}
-    else{const paid=Math.min(player.berries,tile.rent);player.berries-=paid;players[owner].berries+=paid;phase='end';event=`${tile.name} принадлежит ${players[owner].name}. Аренда: ${paid} морошки.`}
-  }else if(tile.kind==='berry'||tile.kind==='bonus'){player.berries+=tile.reward;phase='end';event=`${tile.name}: +${tile.reward} морошки!`}
-  else if(tile.kind==='deer'){player.deer++;phase='end';event='Олень теперь с вами! Один жетон защитит от метели.'}
-  else if(tile.kind==='storm'){phase='end';if(player.deer){player.deer--;event='Олень провёл вас сквозь метель. Морошка сохранена!'}else{const loss=Math.min(2,player.berries);player.berries-=loss;event=`Метель! Потеряно ${loss} морошки.`}}
-  else if(tile.kind==='jackpot'){phase='end';const prize=Math.floor(Math.random()*3);if(prize===0){player.berries+=5;event='СЕВЕРНЫЙ ДЖЕКПОТ! Огромная корзина: +5 морошек!'}else if(prize===1){player.berries+=3;event='СЕВЕРНЫЙ ДЖЕКПОТ! Ягодная находка: +3 морошки!'}else{player.deer++;player.berries++;event='СЕВЕРНЫЙ ДЖЕКПОТ! Олень и 1 морошка ваши!'}}
+    else{const due=rentFor(tile,players[owner].levels[index]||0),result=charge(due,owner);phase='end';event=`Аренда «${tile.name}»: ${rub(result.paid)} → ${players[owner].name}${result.shortfall?' (банкротство)':''}.`}
+  }else if(tile.kind==='chance'||tile.kind==='fund'){phase='end';event=cardDraw(tile.kind)}
+  else if(tile.kind==='tax'){const result=charge(tile.cost);phase='end';event=`${tile.name}: оплачено ${rub(result.paid)} в банк.`}
+  else if(tile.kind==='jackpot'){phase='end';const prize=[100,150,200][Math.floor(Math.random()*3)];player.cash+=prize;event=`${tile.name}: банк выплачивает ${rub(prize)}!`}
   else{phase='end';event=tile.text}
   setEvent(event);$('diceText').textContent=`${player.name} попал на «${tile.name}».`;
 }
-function buy(){if(phase!=='choice'||pendingTile<0)return;const tile=TILE_DATA[pendingTile],player=activePlayer();if(player.berries<tile.price)return;player.berries-=tile.price;player.owned.push(pendingTile);owners[pendingTile]=turn;setEvent(`${player.name} купил «${tile.name}» за ${tile.price} морошки. Теперь соперники платят аренду.`);pendingTile=-1;phase='end';updateOwnerMarkers();updateUI()}
+function buy(){if(phase!=='choice'||pendingTile<0)return;const tile=TILE_DATA[pendingTile],player=activePlayer(),discount=discountFor(player,tile),price=discounted(tile.price,discount);if(player.cash<price)return;player.cash-=price;if(discount)player.discount--;player.owned.push(pendingTile);owners[pendingTile]=turn;setEvent(`${player.name} купил «${tile.name}» за ${rub(price)}${discount?' со скидкой карты «Морошка»':''}.`);pendingTile=-1;phase='end';updateOwnerMarkers();updateUI()}
+function upgrade(){if(phase!=='end')return;const index=Number($('upgradeSelect').value),tile=TILE_DATA[index],player=activePlayer();if(!tile||owners[index]!==turn||(player.levels[index]||0)>=2)return;const discount=discountFor(player,tile),price=discounted(tile.upgrade,discount);if(player.cash<price)return;player.cash-=price;player.levels[index]=(player.levels[index]||0)+1;if(discount)player.discount--;setEvent(`Улучшено «${tile.name}» до уровня ${player.levels[index]}. Потрачено ${rub(price)}, новая аренда ${rub(rentFor(tile,player.levels[index]))}.`);updateUI()}
 function pass(){if(phase!=='choice')return;setEvent(`${activePlayer().name} оставил «${TILE_DATA[pendingTile].name}» свободным.`);pendingTile=-1;phase='end';updateUI()}
-function finishTurn(){if(phase!=='end')return;turnsTaken++;if(turnsTaken>=players.length*8){finishGame();return}turn=(turn+1)%players.length;phase='roll';$('diceFace').textContent='⚀';$('diceText').textContent='Теперь ваш ход.';setEvent(`${activePlayer().name}, бросайте кубик!`);updateUI()}
-function finishGame(){phase='finished';const ranked=players.map((p,i)=>({name:p.name,berries:p.berries,total:p.berries+p.owned.reduce((sum,index)=>sum+TILE_DATA[index].price,0),index:i})).sort((a,b)=>b.total-a.total||b.berries-a.berries);const winner=ranked[0];$('winnerTitle').textContent=`${winner.name} победил!`;$('winnerText').textContent=`Итог: ${winner.total} очков (${winner.berries} морошек и ${winner.total-winner.berries} очков за купленные места). ${ranked.slice(1).map(p=>`${p.name}: ${p.total}`).join(' · ')}`;setEvent(`Партия завершена. Победил ${winner.name}!`);updateUI();winnerDialog.showModal()}
+function finishTurn(){if(phase!=='end')return;turnsTaken++;if(turnsTaken>=players.length*ROUNDS||players.filter(p=>!p.bankrupt).length<=1){finishGame();return}do{turn=(turn+1)%players.length}while(players[turn].bankrupt);phase='roll';$('diceFace').textContent='⚀ ⚀';$('diceText').textContent='Теперь ваш ход.';setEvent(`${activePlayer().name}, бросайте кубики!`);updateUI()}
+function finishGame(){phase='finished';const ranked=players.map((p,i)=>({name:p.name,cash:p.cash,total:p.bankrupt?-1:netWorth(p,TILE_DATA),index:i})).sort((a,b)=>b.total-a.total||b.cash-a.cash);const winner=ranked[0];$('winnerTitle').textContent=`${winner.name} победил!`;$('winnerText').textContent=`Капитал ${rub(winner.total)}: наличные ${rub(winner.cash)} + стоимость активов и улучшений. ${ranked.slice(1).map(p=>`${p.name}: ${p.total<0?'банкрот':rub(p.total)}`).join(' · ')}`;setEvent(`Партия завершена. Победил ${winner.name}!`);updateUI();winnerDialog.showModal()}
 
 $('setupForm').addEventListener('submit',event=>{if(event.submitter?.value!=='start')return;const count=Number(new FormData(event.currentTarget).get('playerCount'));startGame(count)});
 $('newGameButton').addEventListener('click',()=>setupDialog.showModal());
 $('playAgainButton').addEventListener('click',()=>{setTimeout(()=>setupDialog.showModal(),0)});
-rollButton.addEventListener('click',roll);$('buyButton').addEventListener('click',buy);$('passButton').addEventListener('click',pass);endTurnButton.addEventListener('click',finishTurn);
+rollButton.addEventListener('click',roll);$('buyButton').addEventListener('click',buy);$('passButton').addEventListener('click',pass);$('upgradeButton').addEventListener('click',upgrade);$('upgradeSelect').addEventListener('change',updateUI);endTurnButton.addEventListener('click',finishTurn);
 initThree();setupDialog.showModal();
