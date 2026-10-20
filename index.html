@@ -1,34 +1,430 @@
 <!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#162934">
-  <meta name="description" content="Морошка — игровая настолка о Муравленко. Опробуйте плоское поле, предприятия, карточки событий и экономическую стратегию прямо в браузере.">
-  <title>Морошка — настольная игра о Муравленко</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <script type="module" src="game.js"></script>
-</head>
-<body>
-  <header class="topbar"><a class="brand" href="#top"><span class="brand-mark">✳</span><span>МОРОШКА <small>МУРАВЛЕНКО / ИГРА</small></span></a><nav aria-label="По странице"><a href="#play">Играть</a><a href="#cards">Карточки</a><a href="#rules">Правила</a></nav><a class="nav-cta" href="#play">ОТКРЫТЬ ПОЛЕ ↗</a></header>
-  <main id="top">
-    <section class="hero"><div class="hero-inner"><p class="eyebrow light">СЕМЕЙНАЯ ЭКОНОМИЧЕСКАЯ ИГРА / МУРАВЛЕНКО</p><h1>Север —<br><em>ваш ход.</em></h1><p>Плоское игровое поле, цветные фишки, предприятия города и колоды неожиданностей. Покупайте бизнес, получайте аренду и управляйте рублями.</p><div class="hero-actions"><a class="button primary" href="#play">Начать партию <span>↗</span></a><span>2–4 игрока · 10–15 минут</span></div></div><div class="hero-index">НАСТОЛЬНАЯ ИГРА, КОТОРУЮ МОЖНО ОПРОБОВАТЬ</div></section>
-    <div class="ticker" aria-hidden="true">МУРАВЛЕНКО ✳ ПРЕДПРИЯТИЯ ✳ СЕВЕРНЫЙ ШАНС ✳ РУБЛИ ✳ МУРАВЛЕНКО ✳</div>
-    <section class="play-section" id="play"><div class="section-heading"><div><p class="eyebrow">01 / ИГРАТЬ СЕЙЧАС</p><h2>Партия <em>начинается.</em></h2></div><p>Поле без объёмных построек: как настоящая раскрашенная настолка. Фишки показывают, где находятся игроки. Нажмите на любую клетку, чтобы посмотреть её правило.</p></div>
-      <div class="game-layout"><div class="board-frame"><div class="board-toolbar"><span>МОРОШКА / ИГРОВОЕ ПОЛЕ</span><span id="modeBadge">РЕЖИМ: СЛУЧАЙНЫЕ КАРТЫ</span></div><div id="board" class="board" role="group" aria-label="Игровое поле из 24 клеток"></div><div class="board-caption"><span>НАЖМИТЕ НА КЛЕТКУ ДЛЯ ПРОСМОТРА</span><span>ФИШКИ ПЕРЕМЕЩАЮТСЯ ПО ЧАСОВОЙ СТРЕЛКЕ</span></div></div>
-      <aside class="control-panel" aria-label="Управление партией"><div class="panel-top"><span>БАНК / РУБЛИ</span><span id="roundLabel">РАУНД 1</span></div><div class="turn-block"><p class="eyebrow light">СЕЙЧАС ХОДИТ</p><h3 id="turnName">Игрок 1</h3><p id="phaseHint">Бросайте два кубика.</p></div><div class="cash-block"><span>НАЛИЧНЫЕ</span><strong id="cashValue">1 200 ₽</strong><small id="debtValue">Долг: 0 ₽</small></div><div id="perks" class="perks"></div><div id="playersList" class="players-list" aria-label="Счёт игроков"></div><div class="dice-block"><span>ДВА КУБИКА</span><strong id="diceValue" aria-live="polite">⚀ ⚀</strong></div><div id="actions" class="actions"><button id="rollButton" class="button primary full" type="button">Бросить кубики ↗</button><button id="nextButton" class="button primary full" type="button" hidden>Передать ход →</button><button id="repayButton" class="button ghost full" type="button" hidden>Погасить долг</button></div><div class="event-box" aria-live="polite"><span>ПОСЛЕДНЕЕ СОБЫТИЕ</span><p id="eventText">Создайте партию и начинайте игру.</p></div><button id="newGameButton" class="text-button" type="button">Новая партия ↗</button></aside></div>
-      <div class="shelf-heading"><div><p class="eyebrow">ВАШ ПОРТФЕЛЬ</p><h3>Карточки всегда под рукой</h3></div><p>Купленные предприятия автоматически оказываются здесь. Нажмите на карточку, чтобы увидеть аренду и улучшения.</p></div><div id="holdings" class="holdings" aria-live="polite"></div>
-    </section>
-    <section class="cards-section" id="cards"><div class="section-heading"><div><p class="eyebrow">02 / КОМПЛЕКТ</p><h2>Рубли. Бизнес. <em>Шанс.</em></h2></div><p>Все карточки на сайте — игровые. «Морошка» не отдельная клетка: её можно случайно вытянуть из колоды «Северный шанс».</p></div><div class="showcase"><article class="showcase-deed"><div class="card-kicker">КАРТОЧКА БИЗНЕСА <span>ЭНЕРГИЯ</span></div><div class="deed-symbol">◆</div><h3>Нефтяная<br>качалка</h3><div class="card-row"><span>ПОКУПКА</span><b>300 ₽</b></div><div class="card-row"><span>АРЕНДА</span><b>55 ₽</b></div><div class="card-row"><span>УЛУЧШЕНИЕ</span><b>150 ₽</b></div><small>ПРИНОСИТ ДОХОД ЗА КРУГ</small></article><article class="showcase-bonus"><div class="card-kicker">СЕВЕРНЫЙ ШАНС <span>✳</span></div><div class="bonus-symbol">✳</div><h3>Карта<br>«Морошка»</h3><p>Три покупки или улучшения в категориях «отдых», «культура» и «сервис» со скидкой 10%.</p><small>ВЫМЫШЛЕННЫЙ ИГРОВОЙ БОНУС</small></article><div class="banknotes"><div class="banknote n500"><span>БАНК МОРОШКИ · ИГРОВЫЕ ДЕНЬГИ</span><b>500 ₽</b><i>✳</i></div><div class="banknote n200"><span>БАНК МОРОШКИ · ИГРОВЫЕ ДЕНЬГИ</span><b>200 ₽</b><i>◇</i></div><div class="banknote n100"><span>БАНК МОРОШКИ · ИГРОВЫЕ ДЕНЬГИ</span><b>100 ₽</b><i>♞</i></div></div></div></section>
-    <section class="rules-section" id="rules"><div class="section-heading"><div><p class="eyebrow">03 / ПРАВИЛА</p><h2>Понятно за <em>минуту.</em></h2></div><p>Игра сохраняет экономическую логику покупки, аренды и развития, но использует собственные северные карточки и короткий формат партии.</p></div><div class="rules-grid"><article><b>01</b><h3>Два кубика</h3><p>Двигайтесь на сумму очков. За каждый полный круг получите 200 ₽; на долг начисляется 10% за круг.</p></article><article><b>02</b><h3>Покупка или отказ</h3><p>На свободной клетке открывается бизнес. Купите его либо заплатите 30 ₽ штрафа в банк. Аукциона нет.</p></article><article><b>03</b><h3>Аренда и улучшения</h3><p>Гость платит владельцу. Два улучшения повышают аренду в 2 и 4 раза. Нефтяная качалка даёт доход за круг.</p></article><article><b>04</b><h3>Карты событий</h3><p>Карты тянутся только на клетках «Северный шанс» и «Городской фонд». Среди них есть скидки, доходы и расходы.</p></article><article><b>05</b><h3>Не проиграть за минуту</h3><p>Партия всегда длится установленное число раундов. При нехватке денег платёж покрывает игровой долг; игрок не выбывает мгновенно.</p></article><article><b>06</b><h3>Итоговый капитал</h3><p>После 12–16 раундов сравниваются наличные плюс цена бизнеса и улучшений минус долг. Выигрывает наибольший капитал.</p></article></div><p class="disclaimer">Игровые суммы и бонусы вымышлены. Карта «Морошка» не является реальной льготой. Ориентиры: <a href="https://www.hasbro.com/common/instruct/Monopoly.pdf" target="_blank" rel="noopener noreferrer">официальные правила Monopoly</a> и <a href="https://sfr.gov.ru/grazhdanam/dop_info/spravochnik_rk/" target="_blank" rel="noopener noreferrer">справка СФР о северных коэффициентах</a>. Тексты и оформление игры оригинальные.</p></section>
-  </main><footer><div class="brand"><span class="brand-mark">✳</span><span>МОРОШКА <small>МУРАВЛЕНКО / ИГРА</small></span></div><p>Концепт семейной настольной игры о северном городе.</p><a href="#top">НАВЕРХ ↑</a></footer>
-  <dialog id="setupDialog" class="dialog"><form method="dialog" id="setupForm"><p class="eyebrow">НОВАЯ ПАРТИЯ</p><h2>Выберите<br><em>формат игры.</em></h2><fieldset><legend>ЧИСЛО ИГРОКОВ</legend><div class="radio-row"><label><input type="radio" name="count" value="2" checked><span>2 игрока</span></label><label><input type="radio" name="count" value="3"><span>3 игрока</span></label><label><input type="radio" name="count" value="4"><span>4 игрока</span></label></div></fieldset><fieldset><legend>КАК ПОЛУЧАТЬ БИЗНЕС</legend><div class="radio-stack"><label><input type="radio" name="mode" value="random" checked><span><b>Случайная карточка</b><small>На клетке открывается случайный бизнес её категории.</small></span></label><label><input type="radio" name="mode" value="fixed"><span><b>Закреплённый бизнес</b><small>У каждой клетки всегда своё предприятие.</small></span></label></div></fieldset><p class="setup-note">Старт — 1 200 ₽ · ориентир 10–15 минут · досрочного окончания нет.</p><button class="button primary full" id="startButton" value="start">Начать партию ↗</button></form></dialog>
-  <dialog id="offerDialog" class="dialog card-dialog"><div class="dialog-actions"><button type="button" class="close-button" data-close="offerDialog" aria-label="Закрыть">×</button></div><p class="eyebrow">ПРЕДЛОЖЕНИЕ БАНКА</p><div id="offerCard"></div><p id="offerFineText" class="fine-note"></p><div class="decision-row"><button id="buyButton" class="button primary" type="button">Купить</button><button id="declineButton" class="button ghost" type="button">Отказаться</button></div></dialog>
-  <dialog id="eventDialog" class="dialog card-dialog"><div class="dialog-actions"><button type="button" class="close-button" data-close="eventDialog" aria-label="Закрыть">×</button></div><p class="eyebrow" id="eventDeck">СЕВЕРНЫЙ ШАНС</p><div id="drawnCard"></div><button class="button primary full" type="button" data-close="eventDialog">Вернуться к полю</button></dialog>
-  <dialog id="detailDialog" class="dialog card-dialog"><div class="dialog-actions"><button type="button" class="close-button" data-close="detailDialog" aria-label="Закрыть">×</button></div><div id="detailContent"></div><button id="upgradeButton" class="button primary full" type="button" hidden>Улучшить</button><button class="button ghost full" type="button" data-close="detailDialog">Закрыть</button></dialog>
-  <dialog id="finishDialog" class="dialog"><p class="eyebrow">ИТОГ ПАРТИИ</p><h2 id="finishTitle">Победа!</h2><div id="finishScores"></div><button id="againButton" class="button primary full" type="button">Сыграть ещё ↗</button></dialog>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#162934" />
+    <meta
+      name="description"
+      content="Северный капитал — интерактивный прототип настольной игры о Муравленко: предприятия, карточки событий, рубли и стратегия."
+    />
+    <title>Северный капитал — настольная игра о Муравленко</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="game.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top"
+        ><span class="brand-mark">✳</span
+        ><span>СЕВЕРНЫЙ КАПИТАЛ <small>МУРАВЛЕНКО / ИГРА</small></span></a
+      >
+      <nav aria-label="По странице">
+        <a href="#play">Играть</a><a href="#cards">Карточки</a
+        ><a href="#rules">Правила</a>
+      </nav>
+      <a class="nav-cta" href="#play">ОТКРЫТЬ ПОЛЕ ↗</a>
+    </header>
+    <main id="top">
+      <section class="hero">
+        <div class="hero-inner">
+          <p class="eyebrow light">СЕМЕЙНАЯ ЭКОНОМИЧЕСКАЯ ИГРА / МУРАВЛЕНКО</p>
+          <h1>Север —<br /><em>ваш ход.</em></h1>
+          <p>
+            «Северный капитал» — цифровой прототип будущей настольной игры.
+            Открывайте предприятия Муравленко, берите карточки из двух стопок
+            и управляйте рублями так, как будете делать это за настоящим столом.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#play"
+              >Начать партию <span>↗</span></a
+            ><span>2–4 игрока · 10–15 минут</span>
+          </div>
+        </div>
+        <div class="hero-index">НАСТОЛЬНАЯ ИГРА, КОТОРУЮ МОЖНО ОПРОБОВАТЬ</div>
+      </section>
+      <div class="ticker" aria-hidden="true">
+        СЕВЕРНЫЙ КАПИТАЛ ✳ МУРАВЛЕНКО ✳ ПРЕДПРИЯТИЯ ✳ ГОРОДСКИЕ СОБЫТИЯ ✳ РУБЛИ ✳
+      </div>
+      <section class="play-section" id="play">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">01 / ИГРАТЬ СЕЙЧАС</p>
+            <h2>Партия <em>начинается.</em></h2>
+          </div>
+          <p>
+            Поле без объёмных построек: как настоящая раскрашенная настолка.
+            Фишки показывают, где находятся игроки. Нажмите на любую клетку,
+            чтобы посмотреть её правило.
+          </p>
+        </div>
+        <div class="game-layout">
+          <div class="board-frame">
+            <div class="board-toolbar">
+              <span>СЕВЕРНЫЙ КАПИТАЛ / ПОЛЕ</span
+              ><span id="modeBadge">СЛУЧАЙНЫЙ БИЗНЕС</span>
+              <button id="zoomButton" type="button" aria-label="Увеличить поле" aria-pressed="false">⛶</button>
+            </div>
+            <div class="board-viewport"><div
+                id="board"
+                class="board"
+                role="group"
+                aria-label="Игровое поле из 24 клеток"
+              ></div></div>
+            <div class="board-caption">
+              <span>КАРТОЧКИ БИЗНЕСА ПРИВЯЗАНЫ К НОМЕРАМ КЛЕТОК</span
+              ><span>НА ТЕЛЕФОНЕ УВЕЛИЧЬТЕ ПОЛЕ ⛶</span>
+            </div>
+          </div>
+          <aside class="control-panel" aria-label="Управление партией">
+            <div class="panel-top">
+              <span>ИГРОВОЙ БАНК / ₽</span><span id="roundLabel">РАУНД 1</span>
+            </div>
+            <div class="turn-block">
+              <p class="eyebrow light">СЕЙЧАС ХОДИТ</p>
+              <h3 id="turnName">Игрок 1</h3>
+              <p id="phaseHint">Бросайте два кубика.</p>
+            </div>
+            <div class="cash-block">
+              <span>НАЛИЧНЫЕ</span><strong id="cashValue">1 200 ₽</strong
+              ><small id="debtValue">Кредит: 0 / 300 ₽</small>
+            </div>
+            <div id="perks" class="perks"></div>
+            <div
+              id="playersList"
+              class="players-list"
+              aria-label="Счёт игроков"
+            ></div>
+            <div class="dice-block">
+              <span>ДВА КУБИКА</span
+              ><strong id="diceValue" aria-live="polite">⚀ ⚀</strong>
+            </div>
+            <div id="actions" class="actions">
+              <button id="rollButton" class="button primary full" type="button">
+                Бросить кубики ↗</button
+              ><button
+                id="nextButton"
+                class="button primary full"
+                type="button"
+                hidden
+              >
+                Передать ход →</button
+              ><button
+                id="repayButton"
+                class="button ghost full"
+                type="button"
+                hidden
+              >
+                Погасить долг
+              </button>
+            </div>
+            <div class="event-box" aria-live="polite">
+              <span>ПОСЛЕДНЕЕ СОБЫТИЕ</span>
+              <p id="eventText">Создайте партию и начинайте игру.</p>
+            </div>
+            <button id="newGameButton" class="text-button" type="button">
+              Новая партия ↗
+            </button>
+          </aside>
+        </div>
+        <div class="shelf-heading">
+          <div>
+            <p class="eyebrow">ВАШ ПОРТФЕЛЬ</p>
+            <h3>Карточки всегда под рукой</h3>
+          </div>
+          <p>
+            Купленные предприятия автоматически оказываются здесь. Нажмите на
+            карточку, чтобы увидеть аренду и улучшения.
+          </p>
+        </div>
+        <div id="holdings" class="holdings" aria-live="polite"></div>
+      </section>
+      <section class="cards-section" id="cards">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">02 / КОМПЛЕКТ</p>
+            <h2>Рубли. Бизнес. <em>Шанс.</em></h2>
+          </div>
+          <p>
+            Все карточки на сайте — игровые. «Морошка» не отдельная клетка: её
+            можно случайно вытянуть из колоды «Северный шанс».
+          </p>
+        </div>
+        <div class="showcase">
+          <article class="showcase-deed">
+            <div class="card-kicker">КАРТОЧКА БИЗНЕСА <span>№ 07 / ЭНЕРГИЯ</span></div>
+            <div class="deed-symbol">◆</div>
+            <h3>Нефтяная<br />качалка</h3>
+            <div class="card-row"><span>ПОКУПКА</span><b>300 ₽</b></div>
+            <div class="card-row"><span>АРЕНДА</span><b>55 ₽</b></div>
+            <div class="card-row"><span>УЛУЧШЕНИЕ</span><b>150 ₽</b></div>
+            <small>ПРИНОСИТ ДОХОД ЗА КРУГ</small>
+          </article>
+          <article class="showcase-bonus">
+            <div class="card-kicker">СЕВЕРНЫЙ ШАНС <span>✳</span></div>
+            <div class="bonus-symbol">✳</div>
+            <h3>Карта<br />«Морошка»</h3>
+            <p>
+              Три покупки или улучшения в категориях «отдых», «культура» и
+              «сервис» со скидкой 10%.
+            </p>
+            <small>ВЫМЫШЛЕННЫЙ ИГРОВОЙ БОНУС</small>
+          </article>
+          <div class="banknotes">
+            <div class="banknote n500">
+              <span>ИГРОВОЙ БАНК · СЕВЕРНЫЙ КАПИТАЛ</span><b>500 ₽</b><i>✳</i>
+            </div>
+            <div class="banknote n200">
+              <span>ИГРОВОЙ БАНК · СЕВЕРНЫЙ КАПИТАЛ</span><b>200 ₽</b><i>◇</i>
+            </div>
+            <div class="banknote n100">
+              <span>ИГРОВОЙ БАНК · СЕВЕРНЫЙ КАПИТАЛ</span><b>100 ₽</b><i>♞</i>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="rules-section" id="rules">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">03 / ПРАВИЛА</p>
+            <h2>Понятно за <em>минуту.</em></h2>
+          </div>
+          <p>
+            Игра сохраняет экономическую логику покупки, аренды и развития, но
+            использует собственные северные карточки и короткий формат партии.
+          </p>
+        </div>
+        <div class="rules-grid">
+          <article>
+            <b>01</b>
+            <h3>Два кубика</h3>
+            <p>
+              Двигайтесь на сумму очков. За каждый полный круг получите 200 ₽;
+              на долг начисляется 10% за круг.
+            </p>
+          </article>
+          <article>
+            <b>02</b>
+            <h3>Покупка или отказ</h3>
+            <p>
+              На свободной клетке открывается бизнес. Купите его либо заплатите
+              30 ₽ штрафа в банк. Аукциона нет.
+            </p>
+          </article>
+          <article>
+            <b>03</b>
+            <h3>Аренда и улучшения</h3>
+            <p>
+              Гость платит владельцу. Два улучшения повышают аренду в 2 и 4
+              раза; полный набор категории даёт ещё +50%. Заложенный бизнес
+              аренду не приносит.
+            </p>
+          </article>
+          <article>
+            <b>04</b>
+            <h3>Карты событий</h3>
+            <p>
+              На клетках «Северный шанс» и «Городские события» нажмите
+              подсвеченную стопку в центре. «Морошка» — одна из карт шанса.
+            </p>
+          </article>
+          <article>
+            <b>05</b>
+            <h3>Не проиграть за минуту</h3>
+            <p>
+              При нехватке денег продайте улучшения, заложите бизнес или
+              возьмите до 300 ₽ кредита. Только после исчерпания этих
+              возможностей наступает банкротство.
+            </p>
+          </article>
+          <article>
+            <b>06</b>
+            <h3>Итоговый капитал</h3>
+            <p>
+              После 12–16 раундов сравниваются наличные плюс цена бизнеса и
+              улучшений минус кредит и залоги. Досрочной победы нет.
+            </p>
+          </article>
+        </div>
+        <p class="disclaimer">
+          Игровые суммы и бонусы вымышлены. Карта «Морошка» не является реальной
+          льготой. Ориентиры:
+          <a
+            href="https://www.hasbro.com/common/instruct/Monopoly.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            >официальные правила Monopoly</a
+          >
+          и
+          <a
+            href="https://sfr.gov.ru/grazhdanam/dop_info/spravochnik_rk/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >справка СФР о северных коэффициентах</a
+          >. Тексты и оформление игры оригинальные.
+        </p>
+      </section>
+    </main>
+    <footer>
+      <div class="brand">
+        <span class="brand-mark">✳</span
+        ><span>СЕВЕРНЫЙ КАПИТАЛ <small>МУРАВЛЕНКО / ИГРА</small></span>
+      </div>
+      <p>Концепт семейной настольной игры о северном городе.</p>
+      <a href="#top">НАВЕРХ ↑</a>
+    </footer>
+    <dialog id="setupDialog" class="dialog">
+      <form method="dialog" id="setupForm">
+        <p class="eyebrow">НОВАЯ ПАРТИЯ</p>
+        <h2>Выберите<br /><em>формат игры.</em></h2>
+        <fieldset>
+          <legend>ЧИСЛО ИГРОКОВ</legend>
+          <div class="radio-row">
+            <label
+              ><input type="radio" name="count" value="2" checked /><span
+                >2 игрока</span
+              ></label
+            ><label
+              ><input type="radio" name="count" value="3" /><span
+                >3 игрока</span
+              ></label
+            ><label
+              ><input type="radio" name="count" value="4" /><span
+                >4 игрока</span
+              ></label
+            >
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>КАК ПОЛУЧАТЬ БИЗНЕС</legend>
+          <div class="radio-stack">
+            <label
+              ><input type="radio" name="mode" value="random" checked /><span
+                ><b>Случайная карточка</b
+                ><small
+                  >На клетке открывается случайный бизнес её категории.</small
+                ></span
+              ></label
+            ><label
+              ><input type="radio" name="mode" value="fixed" /><span
+                ><b>Закреплённый бизнес</b
+                ><small>У каждой клетки всегда своё предприятие.</small></span
+              ></label
+            >
+          </div>
+        </fieldset>
+        <p class="setup-note">
+          Старт — 1 200 ₽ · ориентир 10–15 минут · досрочного окончания нет.
+        </p>
+        <button class="button primary full" id="startButton" value="start">
+          Начать партию ↗
+        </button>
+      </form>
+    </dialog>
+    <dialog id="offerDialog" class="dialog card-dialog">
+      <div class="dialog-actions">
+        <button
+          type="button"
+          class="close-button"
+          data-close="offerDialog"
+          aria-label="Закрыть"
+        >
+          ×
+        </button>
+      </div>
+      <p class="eyebrow">ПРЕДЛОЖЕНИЕ БАНКА</p>
+      <div id="offerCard"></div>
+      <p id="offerFineText" class="fine-note"></p>
+      <div class="decision-row">
+        <button id="buyButton" class="button primary" type="button">
+          Купить</button
+        ><button id="declineButton" class="button ghost" type="button">
+          Отказаться
+        </button>
+      </div>
+    </dialog>
+    <dialog id="eventDialog" class="dialog card-dialog">
+      <div class="dialog-actions">
+        <button
+          type="button"
+          class="close-button"
+          data-close="eventDialog"
+          aria-label="Закрыть"
+        >
+          ×
+        </button>
+      </div>
+      <p class="eyebrow" id="eventDeck">СЕВЕРНЫЙ ШАНС</p>
+      <div id="drawnCard"></div>
+      <button
+        class="button primary full"
+        type="button"
+        data-close="eventDialog"
+      >
+        Вернуться к полю
+      </button>
+    </dialog>
+    <dialog id="detailDialog" class="dialog card-dialog">
+      <div class="dialog-actions">
+        <button
+          type="button"
+          class="close-button"
+          data-close="detailDialog"
+          aria-label="Закрыть"
+        >
+          ×
+        </button>
+      </div>
+      <div id="detailContent"></div>
+      <button
+        id="upgradeButton"
+        class="button primary full"
+        type="button"
+        hidden
+      >
+        Улучшить</button
+      ><button id="sellUpgradeButton" class="button ghost full" type="button" hidden>
+        Продать улучшение</button
+      ><button id="mortgageButton" class="button ghost full" type="button" hidden>
+        Заложить бизнес</button
+      ><button id="redeemButton" class="button ghost full" type="button" hidden>
+        Выкупить залог</button
+      ><button
+        class="button ghost full"
+        type="button"
+        data-close="detailDialog"
+      >
+        Закрыть
+      </button>
+    </dialog>
+    <dialog id="settlementDialog" class="dialog">
+      <p class="eyebrow">РАСЧЁТ С БАНКОМ</p>
+      <h2>Не хватает рублей</h2>
+      <p id="settlementReason"></p>
+      <div class="settlement-totals"><span id="settlementDue"></span><strong id="settlementCash"></strong></div>
+      <p id="settlementHelp" class="fine-note"></p>
+      <label class="select-label" for="settlementAsset">ВАШЕ ПРЕДПРИЯТИЕ</label>
+      <select id="settlementAsset"></select>
+      <div class="settlement-actions">
+        <button id="settlementSell" class="button ghost" type="button">Продать улучшение</button>
+        <button id="settlementMortgage" class="button ghost" type="button">Заложить бизнес</button>
+        <button id="settlementBorrow" class="button ghost" type="button">Взять кредит</button>
+      </div>
+      <button id="settlementPay" class="button primary full" type="button">Оплатить</button>
+      <button id="settlementBankrupt" class="button ghost full" type="button" hidden>Объявить банкротство</button>
+    </dialog>
+    <dialog id="finishDialog" class="dialog">
+      <p class="eyebrow">ИТОГ ПАРТИИ</p>
+      <h2 id="finishTitle">Победа!</h2>
+      <div id="finishScores"></div>
+      <button id="againButton" class="button primary full" type="button">
+        Сыграть ещё ↗
+      </button>
+    </dialog>
+  </body>
 </html>
