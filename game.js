@@ -79,6 +79,8 @@ let turn = 0, turnsTaken = 0, phase = 'setup', pendingTile = -1;
 let theta = .62, phi = .94, distance = 19;
 let pointerStart = null;
 let sceneVisible = true;
+const pumpBeams=[];
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function coord(index){const [r,c]=POSITIONS[index];return new THREE.Vector3((c-3)*1.52,0,(r-3)*1.52)}
 function material(color,roughness=.86){return new THREE.MeshStandardMaterial({color,roughness,metalness:.04})}
@@ -123,9 +125,12 @@ function deer(x,z,size=1,parent=board){
 }
 function oilPump(x,z,parent=board){
   const steel=material(0x8d6654),dark=material(0x183f49);
-  box(.5,.05,.35,dark,x,.05,z,parent);box(.06,.52,.06,steel,x-.18,.3,z,parent);
-  const beam=box(.72,.08,.09,steel,x,.61,z,parent);beam.rotation.z=-.17;
-  box(.04,.32,.04,dark,x+.29,.45,z,parent);
+  box(.58,.05,.4,dark,x,.05,z,parent);box(.06,.52,.06,steel,x-.12,.3,z,parent);
+  const pivot=new THREE.Group();pivot.position.set(x-.12,.61,z);parent.add(pivot);
+  box(.8,.08,.1,steel,.2,0,0,pivot);
+  box(.14,.17,.14,material(0xe1a85a),-.29,-.08,0,pivot);
+  box(.045,.34,.045,dark,.54,-.23,0,pivot);
+  pumpBeams.push(pivot);
 }
 function cloudberry(x,z,parent=board){
   const orange=material(0xf3954d),green=material(0x4c8466);
@@ -202,6 +207,7 @@ function initThree(){
     resize();updateCamera();$('sceneStatus').textContent='ПОЛЕ ГОТОВО';
     new ResizeObserver(resize).observe(sceneWrap);
     new IntersectionObserver(entries=>{sceneVisible=entries[0].isIntersecting;if(sceneVisible)render()},{threshold:.01}).observe(sceneWrap);
+    let last=0;function animate(time){requestAnimationFrame(animate);if(!sceneVisible||document.hidden||reducedMotion.matches||time-last<32)return;last=time;pumpBeams.forEach((beam,i)=>beam.rotation.z=Math.sin(time*.0013+i)*.2);render()}requestAnimationFrame(animate);
   }catch(error){console.error(error);$('sceneFallback').hidden=false;$('sceneStatus').textContent='WEBGL НЕДОСТУПЕН';}
 }
 function resize(){if(!renderer)return;const rect=sceneWrap.getBoundingClientRect();renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));renderer.setSize(Math.max(1,rect.width),Math.max(1,rect.height),false);camera.aspect=rect.width/Math.max(1,rect.height);camera.updateProjectionMatrix();render()}
