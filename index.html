@@ -1,430 +1,76 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#162934" />
-    <meta
-      name="description"
-      content="Северный капитал — интерактивный прототип настольной игры о Муравленко: предприятия, карточки событий, рубли и стратегия."
-    />
-    <title>Северный капитал — настольная игра о Муравленко</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles.css" />
-    <script type="module" src="game.js"></script>
-  </head>
-  <body>
-    <header class="topbar">
-      <a class="brand" href="#top"
-        ><span class="brand-mark">✳</span
-        ><span>СЕВЕРНЫЙ КАПИТАЛ <small>МУРАВЛЕНКО / ИГРА</small></span></a
-      >
-      <nav aria-label="По странице">
-        <a href="#play">Играть</a><a href="#cards">Карточки</a
-        ><a href="#rules">Правила</a>
-      </nav>
-      <a class="nav-cta" href="#play">ОТКРЫТЬ ПОЛЕ ↗</a>
-    </header>
-    <main id="top">
-      <section class="hero">
-        <div class="hero-inner">
-          <p class="eyebrow light">СЕМЕЙНАЯ ЭКОНОМИЧЕСКАЯ ИГРА / МУРАВЛЕНКО</p>
-          <h1>Север —<br /><em>ваш ход.</em></h1>
-          <p>
-            «Северный капитал» — цифровой прототип будущей настольной игры.
-            Открывайте предприятия Муравленко, берите карточки из двух стопок
-            и управляйте рублями так, как будете делать это за настоящим столом.
-          </p>
-          <div class="hero-actions">
-            <a class="button primary" href="#play"
-              >Начать партию <span>↗</span></a
-            ><span>2–4 игрока · 10–15 минут</span>
-          </div>
-        </div>
-        <div class="hero-index">НАСТОЛЬНАЯ ИГРА, КОТОРУЮ МОЖНО ОПРОБОВАТЬ</div>
-      </section>
-      <div class="ticker" aria-hidden="true">
-        СЕВЕРНЫЙ КАПИТАЛ ✳ МУРАВЛЕНКО ✳ ПРЕДПРИЯТИЯ ✳ ГОРОДСКИЕ СОБЫТИЯ ✳ РУБЛИ ✳
-      </div>
-      <section class="play-section" id="play">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">01 / ИГРАТЬ СЕЙЧАС</p>
-            <h2>Партия <em>начинается.</em></h2>
-          </div>
-          <p>
-            Поле без объёмных построек: как настоящая раскрашенная настолка.
-            Фишки показывают, где находятся игроки. Нажмите на любую клетку,
-            чтобы посмотреть её правило.
-          </p>
-        </div>
-        <div class="game-layout">
-          <div class="board-frame">
-            <div class="board-toolbar">
-              <span>СЕВЕРНЫЙ КАПИТАЛ / ПОЛЕ</span
-              ><span id="modeBadge">СЛУЧАЙНЫЙ БИЗНЕС</span>
-              <button id="zoomButton" type="button" aria-label="Увеличить поле" aria-pressed="false">⛶</button>
-            </div>
-            <div class="board-viewport"><div
-                id="board"
-                class="board"
-                role="group"
-                aria-label="Игровое поле из 24 клеток"
-              ></div></div>
-            <div class="board-caption">
-              <span>КАРТОЧКИ БИЗНЕСА ПРИВЯЗАНЫ К НОМЕРАМ КЛЕТОК</span
-              ><span>НА ТЕЛЕФОНЕ УВЕЛИЧЬТЕ ПОЛЕ ⛶</span>
-            </div>
-          </div>
-          <aside class="control-panel" aria-label="Управление партией">
-            <div class="panel-top">
-              <span>ИГРОВОЙ БАНК / ₽</span><span id="roundLabel">РАУНД 1</span>
-            </div>
-            <div class="turn-block">
-              <p class="eyebrow light">СЕЙЧАС ХОДИТ</p>
-              <h3 id="turnName">Игрок 1</h3>
-              <p id="phaseHint">Бросайте два кубика.</p>
-            </div>
-            <div class="cash-block">
-              <span>НАЛИЧНЫЕ</span><strong id="cashValue">1 200 ₽</strong
-              ><small id="debtValue">Кредит: 0 / 300 ₽</small>
-            </div>
-            <div id="perks" class="perks"></div>
-            <div
-              id="playersList"
-              class="players-list"
-              aria-label="Счёт игроков"
-            ></div>
-            <div class="dice-block">
-              <span>ДВА КУБИКА</span
-              ><strong id="diceValue" aria-live="polite">⚀ ⚀</strong>
-            </div>
-            <div id="actions" class="actions">
-              <button id="rollButton" class="button primary full" type="button">
-                Бросить кубики ↗</button
-              ><button
-                id="nextButton"
-                class="button primary full"
-                type="button"
-                hidden
-              >
-                Передать ход →</button
-              ><button
-                id="repayButton"
-                class="button ghost full"
-                type="button"
-                hidden
-              >
-                Погасить долг
-              </button>
-            </div>
-            <div class="event-box" aria-live="polite">
-              <span>ПОСЛЕДНЕЕ СОБЫТИЕ</span>
-              <p id="eventText">Создайте партию и начинайте игру.</p>
-            </div>
-            <button id="newGameButton" class="text-button" type="button">
-              Новая партия ↗
-            </button>
-          </aside>
-        </div>
-        <div class="shelf-heading">
-          <div>
-            <p class="eyebrow">ВАШ ПОРТФЕЛЬ</p>
-            <h3>Карточки всегда под рукой</h3>
-          </div>
-          <p>
-            Купленные предприятия автоматически оказываются здесь. Нажмите на
-            карточку, чтобы увидеть аренду и улучшения.
-          </p>
-        </div>
-        <div id="holdings" class="holdings" aria-live="polite"></div>
-      </section>
-      <section class="cards-section" id="cards">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">02 / КОМПЛЕКТ</p>
-            <h2>Рубли. Бизнес. <em>Шанс.</em></h2>
-          </div>
-          <p>
-            Все карточки на сайте — игровые. «Морошка» не отдельная клетка: её
-            можно случайно вытянуть из колоды «Северный шанс».
-          </p>
-        </div>
-        <div class="showcase">
-          <article class="showcase-deed">
-            <div class="card-kicker">КАРТОЧКА БИЗНЕСА <span>№ 07 / ЭНЕРГИЯ</span></div>
-            <div class="deed-symbol">◆</div>
-            <h3>Нефтяная<br />качалка</h3>
-            <div class="card-row"><span>ПОКУПКА</span><b>300 ₽</b></div>
-            <div class="card-row"><span>АРЕНДА</span><b>55 ₽</b></div>
-            <div class="card-row"><span>УЛУЧШЕНИЕ</span><b>150 ₽</b></div>
-            <small>ПРИНОСИТ ДОХОД ЗА КРУГ</small>
-          </article>
-          <article class="showcase-bonus">
-            <div class="card-kicker">СЕВЕРНЫЙ ШАНС <span>✳</span></div>
-            <div class="bonus-symbol">✳</div>
-            <h3>Карта<br />«Морошка»</h3>
-            <p>
-              Три покупки или улучшения в категориях «отдых», «культура» и
-              «сервис» со скидкой 10%.
-            </p>
-            <small>ВЫМЫШЛЕННЫЙ ИГРОВОЙ БОНУС</small>
-          </article>
-          <div class="banknotes">
-            <div class="banknote n500">
-              <span>ИГРОВОЙ БАНК · СЕВЕРНЫЙ КАПИТАЛ</span><b>500 ₽</b><i>✳</i>
-            </div>
-            <div class="banknote n200">
-              <span>ИГРОВОЙ БАНК · СЕВЕРНЫЙ КАПИТАЛ</span><b>200 ₽</b><i>◇</i>
-            </div>
-            <div class="banknote n100">
-              <span>ИГРОВОЙ БАНК · СЕВЕРНЫЙ КАПИТАЛ</span><b>100 ₽</b><i>♞</i>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section class="rules-section" id="rules">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">03 / ПРАВИЛА</p>
-            <h2>Понятно за <em>минуту.</em></h2>
-          </div>
-          <p>
-            Игра сохраняет экономическую логику покупки, аренды и развития, но
-            использует собственные северные карточки и короткий формат партии.
-          </p>
-        </div>
-        <div class="rules-grid">
-          <article>
-            <b>01</b>
-            <h3>Два кубика</h3>
-            <p>
-              Двигайтесь на сумму очков. За каждый полный круг получите 200 ₽;
-              на долг начисляется 10% за круг.
-            </p>
-          </article>
-          <article>
-            <b>02</b>
-            <h3>Покупка или отказ</h3>
-            <p>
-              На свободной клетке открывается бизнес. Купите его либо заплатите
-              30 ₽ штрафа в банк. Аукциона нет.
-            </p>
-          </article>
-          <article>
-            <b>03</b>
-            <h3>Аренда и улучшения</h3>
-            <p>
-              Гость платит владельцу. Два улучшения повышают аренду в 2 и 4
-              раза; полный набор категории даёт ещё +50%. Заложенный бизнес
-              аренду не приносит.
-            </p>
-          </article>
-          <article>
-            <b>04</b>
-            <h3>Карты событий</h3>
-            <p>
-              На клетках «Северный шанс» и «Городские события» нажмите
-              подсвеченную стопку в центре. «Морошка» — одна из карт шанса.
-            </p>
-          </article>
-          <article>
-            <b>05</b>
-            <h3>Не проиграть за минуту</h3>
-            <p>
-              При нехватке денег продайте улучшения, заложите бизнес или
-              возьмите до 300 ₽ кредита. Только после исчерпания этих
-              возможностей наступает банкротство.
-            </p>
-          </article>
-          <article>
-            <b>06</b>
-            <h3>Итоговый капитал</h3>
-            <p>
-              После 12–16 раундов сравниваются наличные плюс цена бизнеса и
-              улучшений минус кредит и залоги. Досрочной победы нет.
-            </p>
-          </article>
-        </div>
-        <p class="disclaimer">
-          Игровые суммы и бонусы вымышлены. Карта «Морошка» не является реальной
-          льготой. Ориентиры:
-          <a
-            href="https://www.hasbro.com/common/instruct/Monopoly.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            >официальные правила Monopoly</a
-          >
-          и
-          <a
-            href="https://sfr.gov.ru/grazhdanam/dop_info/spravochnik_rk/"
-            target="_blank"
-            rel="noopener noreferrer"
-            >справка СФР о северных коэффициентах</a
-          >. Тексты и оформление игры оригинальные.
-        </p>
-      </section>
-    </main>
-    <footer>
-      <div class="brand">
-        <span class="brand-mark">✳</span
-        ><span>СЕВЕРНЫЙ КАПИТАЛ <small>МУРАВЛЕНКО / ИГРА</small></span>
-      </div>
-      <p>Концепт семейной настольной игры о северном городе.</p>
-      <a href="#top">НАВЕРХ ↑</a>
-    </footer>
-    <dialog id="setupDialog" class="dialog">
-      <form method="dialog" id="setupForm">
-        <p class="eyebrow">НОВАЯ ПАРТИЯ</p>
-        <h2>Выберите<br /><em>формат игры.</em></h2>
-        <fieldset>
-          <legend>ЧИСЛО ИГРОКОВ</legend>
-          <div class="radio-row">
-            <label
-              ><input type="radio" name="count" value="2" checked /><span
-                >2 игрока</span
-              ></label
-            ><label
-              ><input type="radio" name="count" value="3" /><span
-                >3 игрока</span
-              ></label
-            ><label
-              ><input type="radio" name="count" value="4" /><span
-                >4 игрока</span
-              ></label
-            >
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend>КАК ПОЛУЧАТЬ БИЗНЕС</legend>
-          <div class="radio-stack">
-            <label
-              ><input type="radio" name="mode" value="random" checked /><span
-                ><b>Случайная карточка</b
-                ><small
-                  >На клетке открывается случайный бизнес её категории.</small
-                ></span
-              ></label
-            ><label
-              ><input type="radio" name="mode" value="fixed" /><span
-                ><b>Закреплённый бизнес</b
-                ><small>У каждой клетки всегда своё предприятие.</small></span
-              ></label
-            >
-          </div>
-        </fieldset>
-        <p class="setup-note">
-          Старт — 1 200 ₽ · ориентир 10–15 минут · досрочного окончания нет.
-        </p>
-        <button class="button primary full" id="startButton" value="start">
-          Начать партию ↗
-        </button>
-      </form>
-    </dialog>
-    <dialog id="offerDialog" class="dialog card-dialog">
-      <div class="dialog-actions">
-        <button
-          type="button"
-          class="close-button"
-          data-close="offerDialog"
-          aria-label="Закрыть"
-        >
-          ×
-        </button>
-      </div>
-      <p class="eyebrow">ПРЕДЛОЖЕНИЕ БАНКА</p>
-      <div id="offerCard"></div>
-      <p id="offerFineText" class="fine-note"></p>
-      <div class="decision-row">
-        <button id="buyButton" class="button primary" type="button">
-          Купить</button
-        ><button id="declineButton" class="button ghost" type="button">
-          Отказаться
-        </button>
-      </div>
-    </dialog>
-    <dialog id="eventDialog" class="dialog card-dialog">
-      <div class="dialog-actions">
-        <button
-          type="button"
-          class="close-button"
-          data-close="eventDialog"
-          aria-label="Закрыть"
-        >
-          ×
-        </button>
-      </div>
-      <p class="eyebrow" id="eventDeck">СЕВЕРНЫЙ ШАНС</p>
-      <div id="drawnCard"></div>
-      <button
-        class="button primary full"
-        type="button"
-        data-close="eventDialog"
-      >
-        Вернуться к полю
-      </button>
-    </dialog>
-    <dialog id="detailDialog" class="dialog card-dialog">
-      <div class="dialog-actions">
-        <button
-          type="button"
-          class="close-button"
-          data-close="detailDialog"
-          aria-label="Закрыть"
-        >
-          ×
-        </button>
-      </div>
-      <div id="detailContent"></div>
-      <button
-        id="upgradeButton"
-        class="button primary full"
-        type="button"
-        hidden
-      >
-        Улучшить</button
-      ><button id="sellUpgradeButton" class="button ghost full" type="button" hidden>
-        Продать улучшение</button
-      ><button id="mortgageButton" class="button ghost full" type="button" hidden>
-        Заложить бизнес</button
-      ><button id="redeemButton" class="button ghost full" type="button" hidden>
-        Выкупить залог</button
-      ><button
-        class="button ghost full"
-        type="button"
-        data-close="detailDialog"
-      >
-        Закрыть
-      </button>
-    </dialog>
-    <dialog id="settlementDialog" class="dialog">
-      <p class="eyebrow">РАСЧЁТ С БАНКОМ</p>
-      <h2>Не хватает рублей</h2>
-      <p id="settlementReason"></p>
-      <div class="settlement-totals"><span id="settlementDue"></span><strong id="settlementCash"></strong></div>
-      <p id="settlementHelp" class="fine-note"></p>
-      <label class="select-label" for="settlementAsset">ВАШЕ ПРЕДПРИЯТИЕ</label>
-      <select id="settlementAsset"></select>
-      <div class="settlement-actions">
-        <button id="settlementSell" class="button ghost" type="button">Продать улучшение</button>
-        <button id="settlementMortgage" class="button ghost" type="button">Заложить бизнес</button>
-        <button id="settlementBorrow" class="button ghost" type="button">Взять кредит</button>
-      </div>
-      <button id="settlementPay" class="button primary full" type="button">Оплатить</button>
-      <button id="settlementBankrupt" class="button ghost full" type="button" hidden>Объявить банкротство</button>
-    </dialog>
-    <dialog id="finishDialog" class="dialog">
-      <p class="eyebrow">ИТОГ ПАРТИИ</p>
-      <h2 id="finishTitle">Победа!</h2>
-      <div id="finishScores"></div>
-      <button id="againButton" class="button primary full" type="button">
-        Сыграть ещё ↗
-      </button>
-    </dialog>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4f0e6">
+<meta name="description" content="Морошка — настольные игры о местах, людях и приключениях. Открой свой край по-новому.">
+<title>Морошка — настольные игры с характером</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f4f0e6;--ink:#202b25;--green:#284b3b;--lime:#d9ef79;--orange:#ed7953;--muted:#6e756b;--line:rgba(32,43,37,.18);--serif:Georgia,serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,Arial,sans-serif}a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}::selection{background:var(--lime);color:var(--ink)}.wrap{width:min(1240px,calc(100% - 48px));margin:auto}.topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1px solid var(--line)}.brand{display:flex;gap:11px;align-items:center;font-family:Unbounded,sans-serif;font-size:18px;font-weight:600;letter-spacing:-.06em}.berry{width:35px;height:35px;border-radius:50% 50% 45% 50%;display:grid;place-items:center;background:var(--orange);color:var(--paper);font-size:20px;transform:rotate(-18deg)}nav{display:flex;gap:28px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}nav a:hover{color:#64804b}.nav-cta,.button{display:inline-flex;align-items:center;justify-content:center;gap:12px;border:1px solid var(--ink);border-radius:999px;padding:13px 19px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;transition:transform .2s,background .2s}.nav-cta:hover,.button:hover{transform:translateY(-2px)}.hero{display:grid;grid-template-columns:1.03fr .97fr;gap:30px;align-items:center;padding:70px 0 85px;min-height:620px}.eyebrow{font-size:11px;letter-spacing:.17em;text-transform:uppercase;font-weight:800;color:var(--muted);display:flex;align-items:center;gap:10px}.eyebrow:before{content:"";width:24px;height:2px;background:var(--orange)}h1,h2,h3,p{margin-top:0}h1{font-family:Unbounded,sans-serif;font-size:clamp(42px,6vw,79px);font-weight:500;letter-spacing:-.085em;line-height:1.02;margin:25px 0}.hero h1 em{font-family:var(--serif);font-weight:400;color:#6d8654;letter-spacing:-.08em}.hero-copy{max-width:460px;font-size:16px;line-height:1.8;color:#596359}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.button.primary{background:var(--green);border-color:var(--green);color:#fff}.button.light{background:transparent}.hero-note{display:flex;align-items:center;gap:10px;margin-top:28px;font-size:11px;color:var(--muted)}.tiny-dots{display:flex}.tiny-dots i{width:20px;height:20px;border:2px solid var(--paper);border-radius:50%;background:var(--orange);margin-left:-5px}.tiny-dots i:nth-child(2){background:var(--green)}.tiny-dots i:nth-child(3){background:var(--lime)}.hero-art{position:relative;min-height:480px;display:grid;place-items:center}.art-orbit{position:absolute;width:min(100%,490px);aspect-ratio:1;border:1px solid var(--line);border-radius:50%;animation:rotate 45s linear infinite}.art-orbit:before,.art-orbit:after{content:"";position:absolute;border:1px dashed var(--line);border-radius:50%;inset:11%}.art-orbit:after{inset:24%}.sun{position:absolute;top:6%;right:8%;width:75px;height:75px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 14px rgba(217,239,121,.18)}.game-box{position:relative;z-index:2;width:min(76%,340px);aspect-ratio:.83;background:var(--green);border-radius:8px;padding:24px;color:var(--paper);box-shadow:18px 22px 0 rgba(40,75,59,.12);transform:rotate(-7deg);transition:transform .4s}.game-box:hover{transform:rotate(-2deg) translateY(-6px)}.box-top{display:flex;justify-content:space-between;font-size:9px;font-weight:800;letter-spacing:.14em}.box-title{font-family:Unbounded,sans-serif;font-size:clamp(24px,3.5vw,41px);line-height:1.04;letter-spacing:-.08em;margin-top:36px}.box-title em{font-family:var(--serif);font-weight:400;color:var(--lime)}.box-land{position:absolute;inset:auto 0 0;height:48%;overflow:hidden}.hill{position:absolute;width:150%;height:110%;border-radius:50% 50% 0 0;left:-25%;bottom:-45%;background:#6e8655;transform:rotate(-12deg)}.hill.two{background:#d9ef79;left:8%;bottom:-65%;transform:rotate(20deg)}.hill.three{background:#ed7953;left:-50%;bottom:-77%;transform:rotate(-5deg)}.box-mark{position:absolute;bottom:22px;left:24px;z-index:3;font-size:9px;letter-spacing:.15em}.floating-card{position:absolute;z-index:4;right:0;bottom:8%;width:170px;padding:15px;background:#fffaf0;border:1px solid var(--line);box-shadow:0 15px 35px #25382b1a;transform:rotate(8deg)}.floating-card small{display:block;color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.13em}.floating-card b{display:block;font-family:Unbounded,sans-serif;font-size:17px;line-height:1.25;margin:17px 0}.floating-card span{font-size:10px;color:#65814f}.art-caption{position:absolute;left:0;bottom:5%;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);writing-mode:vertical-rl;transform:rotate(180deg)}.ticker{background:var(--lime);overflow:hidden;border-block:1px solid var(--ink);padding:15px 0}.ticker-track{display:flex;width:max-content;animation:marquee 28s linear infinite;gap:25px;font-family:Unbounded,sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.02em}.ticker-track span{display:flex;align-items:center;gap:25px}.ticker-track i{font-style:normal;color:var(--orange);font-size:20px}.section{padding:100px 0}.section-head{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:40px}.section-head h2{font-family:Unbounded,sans-serif;font-size:clamp(32px,4.5vw,56px);line-height:1.08;letter-spacing:-.075em;font-weight:500;margin:15px 0 0}.section-head h2 em{font-family:var(--serif);color:#6d8654;font-weight:400}.section-head p{max-width:340px;color:var(--muted);line-height:1.7;font-size:13px;margin-bottom:4px}.games-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.game-card{border:1px solid var(--line);border-radius:8px;padding:14px;transition:transform .25s,box-shadow .25s}.game-card:hover{transform:translateY(-5px);box-shadow:0 18px 35px #20382a0c}.game-visual{height:250px;position:relative;overflow:hidden;border-radius:5px;display:grid;place-items:center}.game-visual.green{background:#dce7cb}.game-visual.orange{background:#f1c4a7}.game-visual.blue{background:#c9d9d5}.mini-board{position:relative;width:170px;height:170px;border:1px solid #284b3b;border-radius:50%;display:grid;place-items:center;transform:rotate(-12deg)}.mini-board:before,.mini-board:after{content:"";position:absolute;inset:18px;border:1px dashed #284b3b;border-radius:50%}.mini-board:after{inset:45px;border-style:solid}.mini-logo{font-family:Unbounded,sans-serif;font-size:20px;letter-spacing:-.1em;text-align:center;z-index:1}.mini-piece{position:absolute;width:30px;height:30px;border-radius:50%;background:var(--orange);border:3px solid var(--paper);box-shadow:0 4px 0 #284b3b;top:5px;right:20px}.mini-piece.p2{background:var(--lime);top:auto;right:auto;bottom:15px;left:3px}.mini-card{position:absolute;background:#fffaf0;width:108px;height:145px;box-shadow:8px 10px 0 #284b3b22;border:1px solid #284b3b;padding:12px;transform:rotate(9deg)}.mini-card:before{content:"КАРТА СОБЫТИЯ";font-size:7px;letter-spacing:.1em}.mini-card:after{content:"НЕОЖИДАННЫЙ ПОВОРОТ";display:block;font-family:Unbounded,sans-serif;font-size:13px;line-height:1.2;margin-top:28px}.mini-card.back{transform:rotate(-12deg) translate(-25px,5px);background:var(--green);color:var(--paper)}.city-shape{font-size:100px;color:var(--green);font-family:var(--serif);line-height:1}.game-info{display:flex;align-items:start;justify-content:space-between;padding:19px 5px 9px;gap:12px}.game-info h3{font-family:Unbounded,sans-serif;font-size:17px;font-weight:500;letter-spacing:-.06em;margin:0 0 7px}.game-info p{font-size:11px;color:var(--muted);margin:0}.round-tag{border:1px solid var(--line);border-radius:99px;padding:7px 9px;font-size:9px;white-space:nowrap}.game-status{font-size:10px;font-weight:800;text-transform:uppercase;color:#6b8353;letter-spacing:.1em;padding:0 5px 8px}.demo-section{background:var(--green);color:var(--paper);position:relative;overflow:hidden}.demo-section:after{content:"✳";position:absolute;right:-35px;top:-90px;font-size:380px;line-height:1;color:#ffffff08;pointer-events:none}.demo-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:70px;align-items:center;position:relative;z-index:1}.demo-section .eyebrow{color:#d0d7c9}.demo-section h2{font-family:Unbounded,sans-serif;font-size:clamp(32px,4.3vw,54px);font-weight:500;letter-spacing:-.08em;line-height:1.1}.demo-section h2 em{font-family:var(--serif);color:var(--lime);font-weight:400}.demo-section .demo-desc{color:#d0d7c9;line-height:1.8;font-size:13px;max-width:350px}.demo-card-wrap{perspective:1200px;min-height:390px;display:grid;place-items:center}.question-card{width:min(100%,380px);min-height:360px;background:#f4f0e6;color:var(--ink);border-radius:8px;padding:28px;position:relative;box-shadow:12px 15px 0 #182e25;transform:rotate(2deg);transition:transform .4s}.question-card:before{content:"";position:absolute;inset:9px;border:1px solid var(--line);pointer-events:none;border-radius:4px}.question-card .card-label{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.question-card .card-symbol{font-size:32px;color:var(--orange);margin:20px 0}.question-card h3{font-family:Unbounded,sans-serif;font-size:25px;line-height:1.18;font-weight:500;letter-spacing:-.06em;margin-bottom:20px}.answers{display:grid;gap:8px}.answer{display:flex;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);background:transparent;text-align:left;border-radius:4px;font-size:12px;transition:background .2s}.answer b{font-size:10px;color:var(--muted)}.answer:hover:not(:disabled){background:#e4e9d6}.answer.correct{background:#dce9c5;border-color:#6b8353}.answer.wrong{background:#f6d6c8;border-color:var(--orange)}.answer:disabled{cursor:default}.card-result{margin-top:13px;font-size:12px;line-height:1.6;font-weight:700;min-height:20px}.draw-again{margin-top:12px;border:0;background:var(--lime);color:var(--ink);padding:13px 18px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}.mechanics{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:8px;overflow:hidden}.mechanic{padding:25px 22px;min-height:190px;border-right:1px solid var(--line)}.mechanic:last-child{border-right:0}.mechanic .num{font-family:Unbounded,sans-serif;font-size:11px;color:var(--orange)}.mechanic h3{font-family:Unbounded,sans-serif;font-size:17px;font-weight:500;letter-spacing:-.06em;margin:28px 0 10px}.mechanic p{font-size:12px;color:var(--muted);line-height:1.7;margin:0}.manifesto{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;background:#e8e4d9;border-radius:8px;padding:45px}.manifesto h2{font-family:Unbounded,sans-serif;font-size:clamp(28px,4vw,48px);font-weight:500;letter-spacing:-.08em;line-height:1.1;margin:16px 0}.manifesto h2 em{font-family:var(--serif);font-weight:400;color:#6d8654}.manifesto p{font-size:13px;line-height:1.8;color:var(--muted)}.manifesto-stamp{aspect-ratio:1;width:min(100%,280px);justify-self:center;border:1px solid var(--green);border-radius:50%;display:grid;place-items:center;position:relative;transform:rotate(-12deg)}.manifesto-stamp:before,.manifesto-stamp:after{content:"";position:absolute;inset:14px;border:1px dashed var(--green);border-radius:50%}.manifesto-stamp:after{inset:35px;border-style:solid}.stamp-text{z-index:1;font-family:Unbounded,sans-serif;text-align:center;font-size:24px;line-height:1.15;letter-spacing:-.08em}.stamp-text span{display:block;font-family:var(--serif);font-size:36px;font-weight:400;color:#6d8654}.contact{padding:85px 0 60px}.contact-inner{background:var(--lime);border-radius:8px;padding:clamp(28px,5vw,60px);display:flex;align-items:end;justify-content:space-between;gap:30px}.contact h2{font-family:Unbounded,sans-serif;font-size:clamp(32px,5vw,60px);line-height:1.05;letter-spacing:-.08em;font-weight:500;margin:16px 0}.contact p{font-size:13px;line-height:1.7;max-width:420px;color:#48513a;margin:0}.contact .button{background:var(--ink);color:white;border-color:var(--ink);white-space:nowrap}.footer{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:24px 0 35px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}.footer .brand{color:var(--ink);font-size:15px}.footer-links{display:flex;gap:20px}.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);background:var(--lime);padding:12px 18px;border-radius:999px;font-size:12px;font-weight:800;opacity:0;pointer-events:none;transition:.25s;z-index:10}.toast.show{opacity:1;transform:translate(-50%,0)}@keyframes rotate{to{transform:rotate(360deg)}}@keyframes marquee{to{transform:translateX(-50%)}}@media(max-width:850px){nav{gap:15px}.hero{grid-template-columns:1fr;padding:55px 0 65px;gap:5px}.hero-art{min-height:420px}.hero-copy{max-width:580px}.demo-grid{grid-template-columns:1fr;gap:25px}.demo-card-wrap{min-height:370px}.mechanics{grid-template-columns:repeat(2,1fr)}.mechanic:nth-child(2){border-right:0}.mechanic:nth-child(-n+2){border-bottom:1px solid var(--line)}.manifesto{gap:25px;padding:30px}.contact-inner{align-items:start;flex-direction:column}.games-grid{gap:10px}.game-visual{height:205px}}@media(max-width:600px){.wrap{width:calc(100% - 32px)}.topbar{padding:16px 0}.brand{font-size:15px}.berry{width:31px;height:31px}nav{display:none}.nav-cta{padding:10px 12px;font-size:10px}.hero{padding:45px 0 50px;min-height:0}h1{font-size:clamp(42px,13vw,66px)}.hero-copy{font-size:14px}.hero-art{min-height:360px}.game-box{width:65%;padding:18px}.box-title{margin-top:26px}.box-mark{left:18px;bottom:16px}.floating-card{width:140px;right:0;bottom:4%;padding:12px}.floating-card b{font-size:14px;margin:12px 0}.art-caption{left:0}.section{padding:65px 0}.section-head{display:block;margin-bottom:25px}.section-head p{margin-top:18px}.games-grid{grid-template-columns:1fr;gap:14px}.game-visual{height:250px}.game-info h3{font-size:16px}.demo-grid{gap:15px}.question-card{padding:23px;min-height:340px}.question-card h3{font-size:22px}.mechanics{grid-template-columns:1fr 1fr}.mechanic{padding:20px 14px;min-height:180px}.mechanic h3{font-size:15px;margin-top:22px}.manifesto{grid-template-columns:1fr;padding:28px 22px}.manifesto-stamp{width:190px;grid-row:1}.manifesto h2{font-size:32px}.contact{padding:55px 0 35px}.contact-inner{padding:28px 22px}.footer{align-items:start;flex-wrap:wrap}.footer>span{width:100%;order:3}.footer-links{gap:13px}.hero-actions .button{font-size:10px;padding:12px 14px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="wrap topbar" id="top">
+<a class="brand" href="#top" aria-label="Морошка — главная"><span class="berry">✳</span><span>морошка</span></a>
+<nav aria-label="Основная навигация"><a href="#games">Игры</a><a href="#about">О нас</a><a href="#demo">Попробовать</a></nav>
+<a class="nav-cta" href="#contact">Сделать игру <span>↗</span></a>
+</header>
+<main>
+<section class="wrap hero">
+<div class="hero-content">
+<div class="eyebrow">Настольные игры с характером</div>
+<h1>Большие истории.<br><em>На одном столе.</em></h1>
+<p class="hero-copy">Морошка превращает знакомые места, местные истории и неожиданные открытия в игры, за которыми хочется собираться снова.</p>
+<div class="hero-actions"><a class="button primary" href="#games">Найти свою игру <span>↗</span></a><a class="button light" href="#demo">Попробовать ход <span>↓</span></a></div>
+<div class="hero-note"><span class="tiny-dots"><i></i><i></i><i></i></span> Играйте вместе. Узнавайте больше. Создавайте свои истории.</div>
+</div>
+<div class="hero-art" aria-label="Иллюстрация настольной игры">
+<div class="art-orbit"></div><div class="sun"></div><div class="art-caption">Сделано, чтобы собираться вместе</div>
+<div class="game-box"><div class="box-top"><span>МОРОШКА / № 001</span><span>2—6 ИГРОКОВ</span></div><div class="box-title">Северный<br><em>маршрут</em></div><div class="box-land"><div class="hill"></div><div class="hill two"></div><div class="hill three"></div></div><div class="box-mark">ОТКРОЙ СВОЙ КРАЙ</div></div>
+<div class="floating-card"><small>КАРТА № 018 · СОБЫТИЕ</small><b>Дорога<br>закрыта!</b><span>Найди другой путь ↗</span></div>
+</div>
+</section>
+<div class="ticker" aria-hidden="true"><div class="ticker-track"><span>Меньше экранов <i>✳</i> Больше историй <i>✳</i> Свои места — новые открытия <i>✳</i> Игры, которые объединяют <i>✳</i> Меньше экранов <i>✳</i> Больше историй <i>✳</i> Свои места — новые открытия <i>✳</i> Игры, которые объединяют <i>✳</i></span></div></div>
+<section class="wrap section" id="games">
+<div class="section-head"><div><div class="eyebrow">Коллекция / 01</div><h2>Каждая коробка —<br><em>новый мир.</em></h2></div><p>Начинаем с родного Севера, а дальше — города, маршруты, загадки и истории, которые заслуживают собственного игрового поля.</p></div>
+<div class="games-grid">
+<article class="game-card"><div class="game-visual green"><div class="mini-board"><div class="mini-logo">СЕВЕРНЫЙ<br>МАРШРУТ</div><span class="mini-piece"></span><span class="mini-piece p2"></span></div></div><div class="game-info"><div><h3>Северный маршрут</h3><p>Муравленко · ЯНАО</p></div><span class="round-tag">2–6 игроков</span></div><div class="game-status">Первый выпуск · В разработке</div></article>
+<article class="game-card"><div class="game-visual orange"><div class="mini-card back"></div><div class="mini-card"></div></div><div class="game-info"><div><h3>Тайны Сибири</h3><p>Экспедиция по большой земле</p></div><span class="round-tag">2–5 игроков</span></div><div class="game-status">Следующий мир · Идея</div></article>
+<article class="game-card"><div class="game-visual blue"><div class="city-shape">⌂</div><div class="mini-piece" style="top:30px;right:27%"></div><div class="mini-piece p2" style="bottom:30px;left:24%"></div></div><div class="game-info"><div><h3>Города рядом</h3><p>Узнавай места по деталям</p></div><span class="round-tag">2–6 игроков</span></div><div class="game-status">Будущая серия · Идея</div></article>
+</div>
+</section>
+<section class="demo-section section" id="demo"><div class="wrap demo-grid">
+<div><div class="eyebrow">Попробуй прямо сейчас</div><h2>Одна карта.<br><em>Твой ход.</em></h2><p class="demo-desc">В настоящей игре знания помогают двигаться дальше, а случайные события могут перевернуть партию. Проверь, как это работает.</p><button class="draw-again" id="newQuestion">Вытянуть другую карту ↻</button></div>
+<div class="demo-card-wrap"><div class="question-card" id="questionCard"><div class="card-label" id="cardLabel">СЕВЕРНЫЙ МАРШРУТ · КАРТА 001</div><div class="card-symbol">✳</div><h3 id="question">В каком автономном округе находится Муравленко?</h3><div class="answers" id="answers"><button class="answer" data-answer="0"><b>А</b> Ханты-Мансийском</button><button class="answer" data-answer="1"><b>Б</b> Ямало-Ненецком</button><button class="answer" data-answer="2"><b>В</b> Таймырском</button></div><div class="card-result" id="result" aria-live="polite"></div></div></div>
+</div></section>
+<section class="wrap section"><div class="section-head"><div><div class="eyebrow">Как это работает</div><h2>Простые правила.<br><em>Непредсказуемый ход.</em></h2></div><p>Всё, что нужно, — собрать людей за одним столом. Дальше игра создаёт истории сама.</p></div>
+<div class="mechanics"><article class="mechanic"><span class="num">01 / ВЫТЯНИ</span><h3>Открой карту</h3><p>Вопрос, неожиданное событие или возможность, которую нельзя упускать.</p></article><article class="mechanic"><span class="num">02 / РЕШИ</span><h3>Выбери ход</h3><p>Знания помогают, но иногда важнее рискнуть или договориться.</p></article><article class="mechanic"><span class="num">03 / ИЗМЕНИ</span><h3>Прими последствия</h3><p>Удача продвигает вперёд. Ошибка не конец — это новый поворот.</p></article><article class="mechanic"><span class="num">04 / ПОВТОРИ</span><h3>Создай историю</h3><p>Каждая партия складывается по-разному. И в этом смысл.</p></article></div></section>
+<section class="wrap" id="about"><div class="manifesto"><div><div class="eyebrow">Зачем мы это делаем</div><h2>У каждого места есть история. <em>У каждой истории — игра.</em></h2><p>Мы создаём настольные игры, которые знакомят с местами не через скучные лекции, а через решения, азарт и общение. Начинаем с Севера — и хотим, чтобы у каждого региона появилась своя коробка.</p><a href="#contact" class="button light">Обсудить идею <span>↗</span></a></div><div class="manifesto-stamp"><div class="stamp-text">ИГРАЙ<br>СВОЙ<br><span>мир</span></div></div></div></section>
+<section class="wrap contact" id="contact"><div class="contact-inner"><div><div class="eyebrow">Создадим следующую историю</div><h2>Твой город.<br>Твоя игра.</h2><p>Есть идея для игры о своём городе, регионе или сообществе? Давай превратим её в коробку, которую захочется открыть.</p></div><a class="button" href="mailto:hello@moroshka.games?subject=Идея%20для%20настольной%20игры">Предложить идею <span>↗</span></a></div></section>
+</main>
+<footer class="wrap footer"><a class="brand" href="#top"><span class="berry">✳</span><span>морошка</span></a><span>Настольные игры о местах, людях и приключениях.</span><div class="footer-links"><a href="#games">Игры</a><a href="#about">О нас</a><a href="#top">Наверх ↑</a></div></footer>
+<div class="toast" id="toast" role="status">Скоро появится больше игр!</div>
+<script>
+const cards=[
+{label:"СЕВЕРНЫЙ МАРШРУТ · КАРТА 001",q:"В каком автономном округе находится Муравленко?",a:["Ханты-Мансийском","Ямало-Ненецком","Таймырском"],correct:1,ok:"Верно! +2 очка. Продвигайся на одну клетку и тяни карту события.",bad:"Не совсем! Метель задерживает тебя. Потрать 1 припас или ответь на дополнительный вопрос."},
+{label:"СЕВЕРНЫЙ МАРШРУТ · КАРТА 008",q:"Какое животное имеет важнейшее значение в традиционном хозяйстве ненцев?",a:["Северный олень","Верблюд","Бизон"],correct:0,ok:"Точно! Получи припасы и продолжай путь.",bad:"Ошибка! Ты сбился с маршрута — пропусти ход или рискни в дополнительном испытании."},
+{label:"СЕВЕРНЫЙ МАРШРУТ · КАРТА 014",q:"Как называется безлесная природная зона, характерная для севера ЯНАО?",a:["Саванна","Тундра","Степь"],correct:1,ok:"Верно! Ты знаешь Север. +2 очка и бонусный шаг.",bad:"Не угадал! Дорога уходит в сторону. Потрать топливо, чтобы вернуться на маршрут."},
+{label:"СЕВЕРНЫЙ МАРШРУТ · КАРТА 021",q:"Какой город является административным центром Ямало-Ненецкого автономного округа?",a:["Муравленко","Ноябрьск","Салехард"],correct:2,ok:"Правильно! Получи жетон компаса — он поможет обойти одно препятствие.",bad:"Почти! Ты теряешь ориентир. Открой карту события и выполни её условие."},
+{label:"СЕВЕРНЫЙ МАРШРУТ · КАРТА 027",q:"Какой природный ресурс особенно важен для экономики ЯНАО?",a:["Природный газ","Кофе","Оливки"],correct:0,ok:"Верно! Найден запас топлива: +1 ресурс.",bad:"Ответ неверный. Запасов меньше, чем ты думал: потеряй 1 ресурс."}
+];
+let current=0,answered=false;
+const q=document.getElementById("question"),label=document.getElementById("cardLabel"),answers=document.getElementById("answers"),result=document.getElementById("result"),symbol=document.querySelector(".card-symbol"),questionCard=document.getElementById("questionCard");
+function loadCard(index){current=index;answered=false;const c=cards[current];label.textContent=c.label;q.textContent=c.q;result.textContent="";symbol.textContent="✳";symbol.style.color="var(--orange)";answers.innerHTML="";c.a.forEach((text,i)=>{const b=document.createElement("button");b.className="answer";b.dataset.answer=i;b.innerHTML="<b>"+String.fromCharCode(1040+i)+"</b> "+text;b.addEventListener("click",()=>choose(i,b));answers.appendChild(b)});questionCard.style.transform="rotate("+((Math.random()*4)-2)+"deg)";}
+function choose(i,button){if(answered)return;answered=true;const c=cards[current];answers.querySelectorAll("button").forEach((b,n)=>{b.disabled=true;if(n===c.correct)b.classList.add("correct");else if(n===i)b.classList.add("wrong")});const right=i===c.correct;symbol.textContent=right?"✓":"↗";symbol.style.color=right?"#64804b":"var(--orange)";result.textContent=right?c.ok:c.bad;}
+document.getElementById("newQuestion").addEventListener("click",()=>{let next;do{next=Math.floor(Math.random()*cards.length)}while(next===current&&cards.length>1);loadCard(next)});
+document.querySelectorAll('a[href^="mailto:"]').forEach(a=>a.addEventListener("click",()=>{}));
+const toast=document.getElementById("toast");document.querySelectorAll('a[href="#contact"]').forEach(a=>a.addEventListener("click",()=>{if(a.getAttribute("href")==="#contact"){} }));
+loadCard(0);
+</script>
+</body>
 </html>
