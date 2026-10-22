@@ -1,0 +1,30 @@
+/* Winding printed trail and a shared start pad for all players. */
+.map>.route-overlay{filter:drop-shadow(0 2px 2px #2e241e63)}
+.point.start{width:48px;height:48px;background:#fff8e8;border:4px solid #b94e2e;color:#74331f;font-size:11px;box-shadow:0 0 0 6px #fff8e8a8,0 0 0 8px #73492d,0 5px 13px #291e1b7a}
+.map-frame .point.start{width:58px;height:58px;font-size:12px}
+.point.start::after{content:'★';position:absolute;top:-15px;right:-11px;color:#b94e2e;font-size:18px;text-shadow:0 1px #fff8e8}
+.pawn.at-start,.map-frame .pawn.at-start{width:31px;height:31px;border-width:2px;z-index:8}
+.pawn.at-start>.icon{width:21px;height:23px}
+.pawn.at-start small{width:14px;height:14px;font-size:8px;right:-7px;bottom:-6px}
+.pawn.at-start .pawn-name{display:none}
+.active-pawn{z-index:10;box-shadow:0 0 0 3px #fff,0 0 0 6px #bb542d,0 4px 15px #291e1b88!important}
+.map-label{font-weight:800;box-shadow:0 2px 7px #49372f4d}
+.shortcut-label{background:#fff8dfef;border-color:#a54c2c;box-shadow:0 3px 0 #8e5f3b,0 7px 16px #3b251c40}
+.hero-photo>img{animation:soft-breathe 12s ease-in-out infinite}
+.hero-photo{overflow:visible}
+.hero-photo::before{content:'';position:absolute;inset:12px -12px -12px 12px;border:2px solid #9d704c6b;border-radius:35px;transform:rotate(1.3deg);z-index:-1}
+.feature,.step{position:relative;overflow:hidden;transition:transform .45s var(--ease),box-shadow .45s var(--ease),background .45s var(--ease)}
+.feature::before,.step::before{content:'';position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#be5f38,#e6b86d,#738760);transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease)}
+.feature:hover,.step:hover{transform:translateY(-7px);background:#f3e7d0;box-shadow:0 17px 35px #6e4e3022}
+.feature:hover::before,.step:hover::before{transform:scaleX(1)}
+.feature:nth-child(2),.step:nth-child(2){transition-delay:65ms}.feature:nth-child(3),.step:nth-child(3){transition-delay:125ms}.step:nth-child(4){transition-delay:180ms}
+.map-showcase .map{transition:transform .7s var(--ease),box-shadow .7s var(--ease)}
+.map-showcase:hover .map{transform:rotate(-.7deg) scale(1.015);box-shadow:0 25px 55px #49372f37}
+.map-showcase-copy .button{margin-top:12px}
+.cards{isolation:isolate}.sample-card{transition:transform .55s var(--ease),box-shadow .55s var(--ease)}
+.sample-card:hover{z-index:2;box-shadow:0 24px 42px #49372f52!important}
+.cta{position:relative;overflow:hidden;background:linear-gradient(125deg,#9daf89,#c6bb8e 62%,#e3c5a7)}
+.cta::before,.cta::after{content:'';position:absolute;width:350px;height:350px;border:2px solid #fff6df57;border-radius:50%;pointer-events:none}
+.cta::before{left:-140px;bottom:-210px}.cta::after{right:-100px;top:-210px}
+@media(max-width:760px){.map-frame .point.start{width:52px;height:52px}.map-showcase:hover .map{transform:none}.feature:hover,.step:hover{transform:none}.hero-photo::before{inset:8px -6px -6px 6px}}
+@media(prefers-reduced-motion:reduce){.feature,.step,.map-showcase .map,.sample-card,.hero-photo>img{transition:none!important;animation:none!important}.feature:hover,.step:hover,.map-showcase:hover .map{transform:none!important}}

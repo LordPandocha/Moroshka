@@ -23,9 +23,9 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Prepare site files
         run: |
-          mkdir -p _site/play _site/questions
-          cp index.html site.css organic.css landing.js map.js data.js icons.js dice.js route-engine.js question-bank.js _site/
-          cp -R assets _site/assets
+          mkdir -p _site/play _site/questions _site/assets
+          cp index.html site.css organic.css route-v3.css landing.js map.js data.js icons.js route-engine.js question-bank.js _site/
+          cp assets/siberia-board-v2.webp assets/game-table-v2.webp _site/assets/
           cp play/index.html play/game.js _site/play/
           cp questions/index.html questions/catalog.js _site/questions/
           touch _site/.nojekyll

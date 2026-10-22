@@ -2,7 +2,6 @@ import {COLORS,QUESTIONS,FINISH,ROUNDS,SHORTCUTS} from '../data.js';
 import {createGame,current,canShortcut,draw,answer,next,ranking,validSave} from '../route-engine.js';
 import {renderMap,animateMove} from '../map.js';
 import {icon,PAWNS,PAWN_NAMES} from '../icons.js';
-import {diceMarkup,rollDice} from '../dice.js';
 const $=id=>document.getElementById(id),KEY='moroshka-route-v2';let state=null,busy=false;
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
 try{const loaded=JSON.parse(localStorage.getItem(KEY));if(validSave(loaded))state=loaded;}catch{}
@@ -12,8 +11,8 @@ function render(){
   $('round').textContent=`РАУНД ${Math.min(state.round,ROUNDS)} / ${ROUNDS}`;
   $('turnLabel').textContent=state.phase==='finished'?'Путешествие завершено':`Ход игрока ${state.turn+1}`;
   $('turnName').textContent=state.phase==='finished'?'Итоги готовы':p.name;
-  $('turnHint').textContent=state.phase==='finished'?'Все получили одинаковое число ходов. Откройте итоговую таблицу.':p.pos===FINISH?'Финиш! Остальные завершают этот раунд.':canShortcut(state)?`Срез «${SHORTCUTS[p.pos].name}»: бонус +${SHORTCUTS[p.pos].bonus} за верный ответ.`:`Клетка ${p.pos+1} из 20. Обычный ход — ровно одна клетка.`;
-  $('normal').hidden=['question','result'].includes(state.phase);$('normal').textContent=state.phase==='finished'?'Посмотреть итоги':'Открыть вопрос · шаг +1';
+  $('turnHint').textContent=state.phase==='finished'?'Все получили одинаковое число ходов. Откройте итоговую таблицу.':p.pos===FINISH?'Финиш! Остальные завершают этот раунд.':canShortcut(state)?`Срез «${SHORTCUTS[p.pos].name}»: бонус +${SHORTCUTS[p.pos].bonus} только за верный ответ.`:`Клетка ${p.pos+1} из 20. Ответьте верно, чтобы пройти одну клетку.`;
+  $('normal').hidden=['question','result'].includes(state.phase);$('normal').textContent=state.phase==='finished'?'Посмотреть итоги':'Открыть вопрос';
   $('shortcut').hidden=!canShortcut(state);$('shortcut').textContent=canShortcut(state)?`${SHORTCUTS[p.pos].name} · бонус +${SHORTCUTS[p.pos].bonus}`:'Короткий путь';$('resume').hidden=!['question','result'].includes(state.phase);
   ['normal','shortcut','resume','newGame'].forEach(id=>$(id).disabled=busy);
   $('players').replaceChildren(...state.players.map((p,i)=>{const row=document.createElement('div');row.className='player-row'+(i===state.turn&&state.phase!=='finished'?' active':'');const dot=document.createElement('span');dot.className='player-color';dot.style.setProperty('--pawn',COLORS[i]);dot.innerHTML=icon(PAWNS[i]);const info=document.createElement('div'),name=document.createElement('strong'),caption=document.createElement('small');name.textContent=p.name;caption.textContent=`${PAWN_NAMES[i]} · ${p.pos===FINISH?'Финиш':`клетка ${p.pos+1}/20`}`;info.append(name,caption);const score=document.createElement('span');score.className='score';score.innerHTML=`${p.correct} ✓`;score.setAttribute('aria-label',`${p.correct} верных ответов`);row.append(dot,info,score);return row;}));
@@ -25,18 +24,16 @@ function openQuestion(rolling=false){
   const q=QUESTIONS.find(q=>q.id===state.pending.id),p=state.pending,done=state.phase==='result';
   $('deckName').textContent=(q.deck==='city'?'МУРАВЛЕНКО':'ЯМАЛ')+(p.shortcut?' · КОРОТКИЙ ПУТЬ':' · ОБЫЧНЫЙ ШАГ');
   $('questionTitle').textContent=q.text;
-  $('questionHint').textContent=p.shortcut?`Срез: обычный шаг +1, за верный ответ дополнительно +${SHORTCUTS[p.from??current(state).pos].bonus}. Ошибка — только обычный шаг.`:'Один вопрос — ровно одна клетка при любом ответе. Верные ответы учитываются при равном продвижении.';
+  $('questionHint').textContent=p.shortcut?`Верно: шаг +1 и срез ещё +${SHORTCUTS[p.from??current(state).pos].bonus}. Ошибка: остаётесь на месте.`:'Верный ответ — один шаг. Ошибка — фишка остаётся на месте.';
   $('answers').replaceChildren(...p.order.map((original,i)=>{const text=q.answers[original];const b=document.createElement('button');b.type='button';b.className='answer'+(done&&original===q.correct?' correct':done&&i===p.choice?' wrong':'');b.disabled=done;const letter=document.createElement('b');letter.textContent=['А','Б','В'][i];b.append(letter,document.createTextNode(text));b.addEventListener('click',()=>choose(i));return b;}));
   $('feedback').hidden=!done;$('next').hidden=!done;$('next').disabled=rolling;
-  $('diceTray').hidden=!(done&&p.die);
-  if(!$('diceTray').hidden){$('diceTray').innerHTML=diceMarkup(1,true)+`<p>${rolling?'Кубик одного шага вращается…':'Обычный шаг: +1. Все грани — единицы, случайного расстояния нет.'}</p>`;}
   if(done){const result=document.createElement('strong');result.textContent=p.correct?'Верно! Ответ засчитан.':'Теперь вы знаете ответ.';const fact=document.createElement('p');fact.textContent=q.fact;$('feedback').replaceChildren(result,fact);
-    if(!rolling){const move=document.createElement('p');move.textContent=`Продвижение: ${p.to-p.from} шаг.${p.bonus?` Бонус среза: +${p.bonus}.`:''}${p.extra?' '+p.extra:''}`;$('feedback').append(move);const source=document.createElement('a');source.href=q.source;source.target='_blank';source.rel='noopener';source.textContent='Источник факта';$('feedback').append(source);}
-    $('next').textContent=rolling?'Кубик вращается…':state.round===ROUNDS&&state.turn===state.players.length-1?'Подвести итоги':'Сделать ход и передать очередь';
+    if(!rolling){const move=document.createElement('p');move.textContent=p.correct?`Продвижение: +${p.to-p.from} ${p.to-p.from===1?'клетка':'клетки'}.${p.bonus?` Срез сократил путь на ${p.bonus}.`:''}`:'Фишка остаётся на этой клетке.';$('feedback').append(move);const source=document.createElement('a');source.href=q.source;source.target='_blank';source.rel='noopener';source.textContent='Источник факта';$('feedback').append(source);}
+    $('next').textContent=state.round===ROUNDS&&state.turn===state.players.length-1?'Подвести итоги':'Передать очередь';
   }
   if(!$('question').open)$('question').showModal();
 }
-async function choose(choice){if(busy)return;const result=answer(state,choice);if(!result)return;save();busy=true;try{const animate=result.die;openQuestion(Boolean(animate));if(animate)await rollDice($('diceTray').querySelector('.dice-scene'),result.face||result.die*2);}finally{busy=false;openQuestion();$('next').focus();}}
+function choose(choice){if(busy)return;const result=answer(state,choice);if(!result)return;save();openQuestion();$('next').focus();}
 function finish(){const ranks=ranking(state),top=ranks[0],winners=ranks.filter(p=>p.pos===top.pos&&p.correct===top.correct);$('finishTitle').textContent=winners.length>1?'Общая победа!':`${top.name} побеждает!`;$('finishCopy').textContent=winners.length>1?`${winners.map(p=>p.name).join(', ')} прошли одинаково далеко и дали одинаковое число верных ответов.`:'Сравниваем продвижение, затем число верных ответов. У всех поровну ходов.';$('scores').replaceChildren(...ranks.map(p=>{const row=document.createElement('div');row.className='result-row';const name=document.createElement('strong');name.textContent=p.name;const score=document.createElement('span');score.textContent=`${p.pos===FINISH?'Финиш':`Точка ${p.pos+1}`} · верные ответы ${p.correct}`;row.append(name,score);return row;}));if(!$('finish').open)$('finish').showModal();}
 $('newGame').addEventListener('click',setup);$('closeSetup').addEventListener('click',()=>$('setup').close());$('count').addEventListener('change',names);
 $('setupForm').addEventListener('submit',e=>{e.preventDefault();if(busy)return;state=createGame([...$('names').querySelectorAll('input')].map(x=>x.value));$('setup').close();save();render();$('normal').focus();});
