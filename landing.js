@@ -1,6 +1,6 @@
-import {renderMap} from './map.js';
+import {renderMap} from './map.js?v=4';
 import {icon,PAWNS,PAWN_NAMES} from './icons.js';
-import {COLORS} from './data.js';
+import {COLORS} from './data.js?v=4';
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
 renderMap(document.getElementById('previewMap'),[{name:'Олень',pos:7},{name:'Песец',pos:13}]);
 document.getElementById('pawnShowcase').innerHTML=PAWNS.map((name,i)=>`<div class="pawn-sample" style="--pawn:${COLORS[i]}">${icon(name)}<span>${PAWN_NAMES[i]}</span></div>`).join('');

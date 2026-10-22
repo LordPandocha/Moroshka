@@ -1,6 +1,6 @@
-import {COLORS,QUESTIONS,FINISH,ROUNDS,SHORTCUTS} from '../data.js';
-import {createGame,current,canShortcut,draw,answer,next,ranking,validSave} from '../route-engine.js';
-import {renderMap,animateMove} from '../map.js';
+import {COLORS,QUESTIONS,FINISH,ROUNDS,SHORTCUTS} from '../data.js?v=4';
+import {createGame,current,canShortcut,draw,answer,next,ranking,validSave} from '../route-engine.js?v=4';
+import {renderMap,animateMove} from '../map.js?v=4';
 import {icon,PAWNS,PAWN_NAMES} from '../icons.js';
 const $=id=>document.getElementById(id),KEY='moroshka-route-v2';let state=null,busy=false;
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
@@ -11,9 +11,9 @@ function render(){
   $('round').textContent=`РАУНД ${Math.min(state.round,ROUNDS)} / ${ROUNDS}`;
   $('turnLabel').textContent=state.phase==='finished'?'Путешествие завершено':`Ход игрока ${state.turn+1}`;
   $('turnName').textContent=state.phase==='finished'?'Итоги готовы':p.name;
-  $('turnHint').textContent=state.phase==='finished'?'Все получили одинаковое число ходов. Откройте итоговую таблицу.':p.pos===FINISH?'Финиш! Остальные завершают этот раунд.':canShortcut(state)?`Срез «${SHORTCUTS[p.pos].name}»: бонус +${SHORTCUTS[p.pos].bonus} только за верный ответ.`:`Клетка ${p.pos+1} из 20. Ответьте верно, чтобы пройти одну клетку.`;
-  $('normal').hidden=['question','result'].includes(state.phase);$('normal').textContent=state.phase==='finished'?'Посмотреть итоги':'Открыть вопрос';
-  $('shortcut').hidden=!canShortcut(state);$('shortcut').textContent=canShortcut(state)?`${SHORTCUTS[p.pos].name} · бонус +${SHORTCUTS[p.pos].bonus}`:'Короткий путь';$('resume').hidden=!['question','result'].includes(state.phase);
+  $('turnHint').textContent=state.phase==='finished'?'Все получили одинаковое число ходов. Откройте итоговую таблицу.':p.pos===FINISH?'Финиш! Остальные завершают этот раунд.':p.pos===8&&canShortcut(state)?'Речная развилка: на вёслах — длиннее, на моторной лодке — срез через реку.':canShortcut(state)?'Срез «'+SHORTCUTS[p.pos].name+'» экономит '+SHORTCUTS[p.pos].bonus+' клетку(и) за верный ответ.':'Клетка '+(p.pos+1)+' из 20. Ответьте верно, чтобы пройти одну клетку.';
+  $('normal').hidden=['question','result'].includes(state.phase);$('normal').textContent=state.phase==='finished'?'Посмотреть итоги':p.pos===8?'На вёслах · открыть вопрос':canShortcut(state)?'Обычная тропа · открыть вопрос':'Открыть вопрос';
+  $('shortcut').hidden=!canShortcut(state);$('shortcut').textContent=p.pos===8?'Моторная лодка · срез +2':SHORTCUTS[p.pos]?.name+' · срез +'+SHORTCUTS[p.pos]?.bonus;$('resume').hidden=!['question','result'].includes(state.phase);
   ['normal','shortcut','resume','newGame'].forEach(id=>$(id).disabled=busy);
   $('players').replaceChildren(...state.players.map((p,i)=>{const row=document.createElement('div');row.className='player-row'+(i===state.turn&&state.phase!=='finished'?' active':'');const dot=document.createElement('span');dot.className='player-color';dot.style.setProperty('--pawn',COLORS[i]);dot.innerHTML=icon(PAWNS[i]);const info=document.createElement('div'),name=document.createElement('strong'),caption=document.createElement('small');name.textContent=p.name;caption.textContent=`${PAWN_NAMES[i]} · ${p.pos===FINISH?'Финиш':`клетка ${p.pos+1}/20`}`;info.append(name,caption);const score=document.createElement('span');score.className='score';score.innerHTML=`${p.correct} ✓`;score.setAttribute('aria-label',`${p.correct} верных ответов`);row.append(dot,info,score);return row;}));
   $('log').replaceChildren(...state.log.map(msg=>{const li=document.createElement('li');li.textContent=msg;return li;}));
@@ -24,7 +24,8 @@ function openQuestion(rolling=false){
   const q=QUESTIONS.find(q=>q.id===state.pending.id),p=state.pending,done=state.phase==='result';
   $('deckName').textContent=(q.deck==='city'?'МУРАВЛЕНКО':'ЯМАЛ')+(p.shortcut?' · КОРОТКИЙ ПУТЬ':' · ОБЫЧНЫЙ ШАГ');
   $('questionTitle').textContent=q.text;
-  $('questionHint').textContent=p.shortcut?`Верно: шаг +1 и срез ещё +${SHORTCUTS[p.from??current(state).pos].bonus}. Ошибка: остаётесь на месте.`:'Верный ответ — один шаг. Ошибка — фишка остаётся на месте.';
+  const gatePos=p.from??current(state).pos;
+  $('questionHint').textContent=p.shortcut?gatePos===8?'Моторная лодка: верный ответ доставит к дальнему причалу, минуя две речные клетки. Ошибка — остаётесь здесь.':'Верно: шаг +1 и срез ещё +'+SHORTCUTS[gatePos].bonus+'. Ошибка — остаётесь на месте.':gatePos>=8&&gatePos<=10?'Гребная лодка идёт по воде по одной клетке за верный ответ. Ошибка — стоите на месте.':'Верный ответ — один шаг. Ошибка — фишка остаётся на месте.';
   $('answers').replaceChildren(...p.order.map((original,i)=>{const text=q.answers[original];const b=document.createElement('button');b.type='button';b.className='answer'+(done&&original===q.correct?' correct':done&&i===p.choice?' wrong':'');b.disabled=done;const letter=document.createElement('b');letter.textContent=['А','Б','В'][i];b.append(letter,document.createTextNode(text));b.addEventListener('click',()=>choose(i));return b;}));
   $('feedback').hidden=!done;$('next').hidden=!done;$('next').disabled=rolling;
   if(done){const result=document.createElement('strong');result.textContent=p.correct?'Верно! Ответ засчитан.':'Теперь вы знаете ответ.';const fact=document.createElement('p');fact.textContent=q.fact;$('feedback').replaceChildren(result,fact);

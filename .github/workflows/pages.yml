@@ -25,7 +25,7 @@ jobs:
         run: |
           mkdir -p _site/play _site/questions _site/assets
           cp index.html site.css organic.css route-v3.css landing.js map.js data.js icons.js route-engine.js question-bank.js _site/
-          cp assets/siberia-board-v2.webp assets/game-table-v2.webp _site/assets/
+          cp assets/siberia-river-v3.webp assets/game-table-river-v3.webp _site/assets/
           cp play/index.html play/game.js _site/play/
           cp questions/index.html questions/catalog.js _site/questions/
           touch _site/.nojekyll

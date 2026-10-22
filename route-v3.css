@@ -1,5 +1,9 @@
 /* Winding printed trail and a shared start pad for all players. */
 .map>.route-overlay{filter:drop-shadow(0 2px 2px #2e241e63)}
+.point.water,.map-frame .point.water{background:#dff8ff;border:2px solid #086080;color:#07506d;box-shadow:0 2px 0 #053e5b,0 0 0 3px #fff9e5c7}
+.point.water::after{content:'≈';position:absolute;right:-7px;bottom:-8px;color:#eaffff;font-size:16px;text-shadow:0 1px 2px #07475a}
+.map-frame .point.gate{box-shadow:0 0 0 3px #fff8dc,0 0 0 5px #a34f2a,0 3px 12px #2a1b1480}
+.map-showcase .map-art,.map-frame .map-art{object-position:center}
 .point.start{width:48px;height:48px;background:#fff8e8;border:4px solid #b94e2e;color:#74331f;font-size:11px;box-shadow:0 0 0 6px #fff8e8a8,0 0 0 8px #73492d,0 5px 13px #291e1b7a}
 .map-frame .point.start{width:58px;height:58px;font-size:12px}
 .point.start::after{content:'★';position:absolute;top:-15px;right:-11px;color:#b94e2e;font-size:18px;text-shadow:0 1px #fff8e8}
@@ -9,6 +13,7 @@
 .pawn.at-start .pawn-name{display:none}
 .active-pawn{z-index:10;box-shadow:0 0 0 3px #fff,0 0 0 6px #bb542d,0 4px 15px #291e1b88!important}
 .map-label{font-weight:800;box-shadow:0 2px 7px #49372f4d}
+.map-label{background:#fff4dbea;border:1px solid #896c49;padding:3px 7px}
 .shortcut-label{background:#fff8dfef;border-color:#a54c2c;box-shadow:0 3px 0 #8e5f3b,0 7px 16px #3b251c40}
 .hero-photo>img{animation:soft-breathe 12s ease-in-out infinite}
 .hero-photo{overflow:visible}

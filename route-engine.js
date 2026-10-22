@@ -1,4 +1,4 @@
-import {FINISH,ROUNDS,GATES,SHORTCUTS,QUESTIONS} from './data.js';
+import {FINISH,ROUNDS,GATES,SHORTCUTS,QUESTIONS} from './data.js?v=4';
 export const current=s=>s.players[s.turn];
 export function createGame(names){if(names.length<2||names.length>4)throw Error('Нужно 2–4 игрока');return {version:2,players:names.map((name,i)=>({name:String(name).trim().slice(0,20)||`Игрок ${i+1}`,pos:0,correct:0,tried:[]})),turn:0,round:1,phase:'ready',used:[],pending:null,finishRound:null,log:['В путь! Верный ответ — один шаг, ошибка — фишка остаётся на месте.']};}
 export const canShortcut=s=>s.phase==='ready'&&GATES.includes(current(s).pos)&&!current(s).tried.includes(current(s).pos);
