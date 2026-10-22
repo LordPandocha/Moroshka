@@ -1,5 +1,5 @@
 export const FINISH=31, ROUNDS=12, GATES=[7,15,23], CAMPS=[5,13,21,29], EVENTS=[3,11,19,27];
-export const COLORS=['#e67c4b','#356e70','#9673a9','#b38927'];
+export const COLORS=['#C66B3D','#8B9D83','#606C38','#C08E3A'];
 export const POINTS=[[14,85],[23,86],[32,84],[41,85],[50,83],[59,81],[68,79],[77,75],[84,66],[76,61],[67,59],[58,60],[49,61],[40,62],[31,61],[22,56],[16,47],[25,42],[34,40],[43,41],[52,40],[61,38],[70,35],[79,30],[74,22],[65,18],[56,19],[47,23],[40,29],[40,37],[46,45],[53,51]];
 const history='https://www.muravlenko24.ru/news/27166-iz-poselka-v-gorod.html';
 const nameSource='https://www.muravlenko24.ru/news/43474-nash-gorod-nazvan-imenem-velikogo-neftyanika-viktora-muravlenko.html';

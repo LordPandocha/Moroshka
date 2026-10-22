@@ -24,7 +24,8 @@ jobs:
       - name: Prepare site files
         run: |
           mkdir -p _site/play
-          cp index.html site.css landing.js map.js data.js route-engine.js _site/
+          cp index.html site.css organic.css landing.js map.js data.js icons.js dice.js route-engine.js _site/
+          cp -R assets _site/assets
           cp play/index.html play/game.js _site/play/
           touch _site/.nojekyll
       - name: Upload website
